@@ -1,0 +1,103 @@
+services:
+  # SQL Server for database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver-container
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "StrongPassword@123"
+    ports:
+      - "1433:1433"
+    networks:
+      - OurNetworks-App
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P StrongPassword@123 -Q 'SELECT 1'"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  # Keycloak for authentication and authorization
+  keycloak:
+    image: quay.io/keycloak/keycloak:20.0.3
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
+    ports:
+      - "8080:8080"
+    networks:
+      - OurNetworks-App
+
+  # Discovery Service (Consul)
+  consul:
+    image: consul:1.14.6
+    container_name: consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: agent -dev -client=0.0.0.0
+    networks:
+      - OurNetworks-App
+
+   # API Gateway
+  apigateway:
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    container_name: apigateway
+    ports:
+      - "5130:5130"
+      - "7277:7277"
+    depends_on:
+      - consul
+      - grower-service
+      - station-service
+    environment:
+      CONSUL_HTTP_ADDR: "http://consul:8500"
+    networks:
+      - OurNetworks-App
+
+  # Grower Service
+  grower-service:
+    build:
+      context: ./GrowerService
+      dockerfile: Dockerfile
+    container_name: grower-service
+    ports:
+      - "5003:5003"
+    environment:
+      - CONSUL_HTTP_ADDR=http://consul:8500
+      - SERVICE_NAME=grower-service
+    depends_on:
+      - sqlserver
+      - consul
+    networks:
+      - OurNetworks-App
+
+  # Station Service
+  station-service:
+    build:
+      context: ./StationService
+      dockerfile: Dockerfile
+    container_name: station-service
+    ports:
+      - "5004:5004"
+    environment:
+      - CONSUL_HTTP_ADDR=http://consul:8500
+      - SERVICE_NAME=station-service
+    depends_on:
+      - sqlserver
+      - consul
+    networks:
+      - OurNetworks-App
+
+volumes:
+  sql_data:
+
+networks:
+  OurNetworks-App:
+    driver: bridge
