@@ -4,9 +4,13 @@ namespace GrowerService
 {
     public class Program
     {
-        public static void Main(string[] args)
+         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Explicitly configure Kestrel to listen on the assigned port.
+            var port = builder.Configuration["SERVICE_PORT"] ?? "8080";
+            builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -20,31 +24,19 @@ namespace GrowerService
                 cfg.Address = new Uri(address);
             }));
 
-            // Configure Kestrel
-            builder.WebHost.ConfigureKestrel(options =>
-            {
-                options.ListenAnyIP(5003); // HTTP
-                // options.ListenAnyIP(5006, listenOptions =>
-                // {
-                //     listenOptions.UseHttps(
-                //         Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Path") ?? "/https/https-dev-cert.pfx",
-                //         Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Password") ?? "Test@123"
-                //     ); // HTTPS
-                // });
-            });
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{builder.Configuration["SERVICE_NAME"]} API v1");
+                });
             }
 
-            //app.UseHttpsRedirection(); // Redirect HTTP to HTTPS (optional, comment if not needed)
             app.UseAuthorization();
-
             app.MapControllers();
 
             // Register service with Consul
@@ -53,9 +45,9 @@ namespace GrowerService
             var registration = new AgentServiceRegistration
             {
                 ID = Guid.NewGuid().ToString(),
-                Name = "grower-service",
-                Address = "grower-service",
-                Port = 5003 // HTTP port
+                Name = builder.Configuration["SERVICE_NAME"] ?? "default-service",
+                Address = builder.Configuration["SERVICE_HOST"] ?? "localhost",
+                Port = int.Parse(builder.Configuration["SERVICE_PORT"] ?? "5000")
             };
 
             lifetime.ApplicationStarted.Register(() =>

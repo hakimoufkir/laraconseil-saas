@@ -10,36 +10,30 @@ namespace ApiGateway
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Explicitly configure Kestrel to listen on the assigned port.
+            var port = builder.Configuration["SERVICE_PORT"] ?? "8080";
+            builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
             // Add Ocelot and Consul configurations
             builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
             builder.Services.AddOcelot().AddConsul();
 
+            // Add services to the container.
+            builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // Configure Kestrel
-            builder.WebHost.ConfigureKestrel(options =>
-            {
-                options.ListenAnyIP(5130); // HTTP
-                // options.ListenAnyIP(5001, listenOptions =>
-                // {
-                //     listenOptions.UseHttps(
-                //         Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Path") ?? "/https/https-dev-cert.pfx",
-                //         Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Password") ?? "Test@123"
-                //     ); // HTTPS
-                // });
-            });
-
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline
+            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{builder.Configuration["SERVICE_NAME"]} API v1");
+                });
             }
-
-            //app.UseHttpsRedirection(); // Redirect HTTP to HTTPS (optional, comment if not needed)
 
             app.UseAuthorization();
 

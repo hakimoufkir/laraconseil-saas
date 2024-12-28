@@ -29,10 +29,10 @@ C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\sta
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.StationService.props
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.StationService.props
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\staticwebassets.pack.json
-C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\StationS.964C28D1.Up2Date
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\StationService.dll
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\refint\StationService.dll
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\StationService.pdb
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\StationService.genruntimeconfig.cache
 C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\ref\StationService.dll
+C:\Users\Abdelhakim\source\repos\Laraconseil\StationService\obj\Debug\net8.0\StationService.sourcelink.json

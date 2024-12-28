@@ -2,30 +2,59 @@
   "Routes": [
     {
       "DownstreamPathTemplate": "/api/Test/health",
-      "DownstreamScheme": "http",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "grower-service",
-          "Port": 5003
+          "Host": "grower-service.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+          "Port": 443
         }
       ],
       "UpstreamPathTemplate": "/gateway/grower/health",
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Test/health",
-      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/Test/message",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "station-service",
-          "Port": 5004
+          "Host": "grower-service.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/grower/message",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Test/health",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "station-service.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+          "Port": 443
         }
       ],
       "UpstreamPathTemplate": "/gateway/station/health",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Test/message",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "station-service.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/station/message",
+      "UpstreamHttpMethod": [ "GET" ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7277"
+    "BaseUrl": "https://apigateway.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+    "ServiceDiscoveryProvider": {
+      "Host": "consul",
+      "Port": 8500,
+      "Type": "Consul"
+    }
   }
 }

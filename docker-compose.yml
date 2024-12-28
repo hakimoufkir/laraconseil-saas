@@ -51,13 +51,16 @@ services:
     container_name: apigateway
     ports:
       - "5130:5130"
-      - "7277:7277"
     depends_on:
       - consul
       - grower-service
       - station-service
     environment:
       CONSUL_HTTP_ADDR: "http://consul:8500"
+      SERVICE_NAME: apigateway-service
+      SERVICE_HOST: apigateway-service
+      SERVICE_PORT: 5130
+      ASPNETCORE_ENVIRONMENT: Development
     networks:
       - OurNetworks-App
 
@@ -70,8 +73,11 @@ services:
     ports:
       - "5003:5003"
     environment:
-      - CONSUL_HTTP_ADDR=http://consul:8500
-      - SERVICE_NAME=grower-service
+      CONSUL_HTTP_ADDR: "http://consul:8500"
+      SERVICE_NAME: grower-service
+      SERVICE_HOST: grower-service
+      SERVICE_PORT: 5003
+      ASPNETCORE_ENVIRONMENT: Development
     depends_on:
       - sqlserver
       - consul
@@ -87,8 +93,11 @@ services:
     ports:
       - "5004:5004"
     environment:
-      - CONSUL_HTTP_ADDR=http://consul:8500
-      - SERVICE_NAME=station-service
+      CONSUL_HTTP_ADDR: "http://consul:8500"
+      SERVICE_NAME: station-service
+      SERVICE_HOST: station-service
+      SERVICE_PORT: 5004
+      ASPNETCORE_ENVIRONMENT: Development
     depends_on:
       - sqlserver
       - consul

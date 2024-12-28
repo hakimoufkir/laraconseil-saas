@@ -2,7 +2,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 5130
-EXPOSE 7277
 
 
 # Build image for restoring and compiling

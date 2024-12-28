@@ -26,6 +26,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7277"
+    "BaseUrl": "http://localhost:5130"
   }
 }

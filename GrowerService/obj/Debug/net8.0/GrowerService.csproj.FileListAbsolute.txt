@@ -36,3 +36,4 @@ C:\Users\Abdelhakim\source\repos\Laraconseil\GrowerService\obj\Debug\net8.0\refi
 C:\Users\Abdelhakim\source\repos\Laraconseil\GrowerService\obj\Debug\net8.0\GrowerService.pdb
 C:\Users\Abdelhakim\source\repos\Laraconseil\GrowerService\obj\Debug\net8.0\GrowerService.genruntimeconfig.cache
 C:\Users\Abdelhakim\source\repos\Laraconseil\GrowerService\obj\Debug\net8.0\ref\GrowerService.dll
+C:\Users\Abdelhakim\source\repos\Laraconseil\GrowerService\obj\Debug\net8.0\GrowerService.sourcelink.json
