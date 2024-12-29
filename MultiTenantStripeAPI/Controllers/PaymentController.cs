@@ -48,8 +48,8 @@ namespace MultiTenantStripeAPI.Controllers
             },
         },
                 Mode = "subscription", // Use subscription mode
-                SuccessUrl = "http://localhost:4200/success",
-                CancelUrl = "http://localhost:4200/cancel",
+                SuccessUrl = "https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io/success",
+                CancelUrl = "https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io/cancel",
             };
 
             var service = new SessionService();

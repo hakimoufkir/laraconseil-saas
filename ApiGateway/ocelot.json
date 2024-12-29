@@ -47,6 +47,30 @@
       ],
       "UpstreamPathTemplate": "/gateway/station/message",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Payment/create-checkout-session",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/payment/session",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Payment/webhook",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/payment/webhook",
+      "UpstreamHttpMethod": [ "POST" ]
     }
   ],
   "GlobalConfiguration": {

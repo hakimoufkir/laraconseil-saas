@@ -16,12 +16,12 @@ namespace MultiTenantStripeAPI.Middleware
         {
             var path = context.Request.Path.Value;
 
-            // Bypass tenant validation for specific paths
-            if (path != null && (path.StartsWith("/api/Payment/webhook") || path.StartsWith("/api/Payment/create-checkout-session")))
+            // Bypass tenant validation for specific paths == Exclude certain paths from tenant validation
+            if (path != null && (path.StartsWith("/api/Payment/webhook") || path.StartsWith("/api/Payment/create-checkout-session") || path.StartsWith("/api/Debug")))
             {
                 await _next(context);
                 return;
-            }
+            }         
 
             // Tenant validation for other endpoints
             var tenantId = context.Request.Headers["X-Tenant-ID"].FirstOrDefault();

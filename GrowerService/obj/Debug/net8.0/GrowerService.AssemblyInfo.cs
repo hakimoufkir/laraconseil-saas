@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GrowerService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24d80dbff47702f275ec11040459bb928e7bb52a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bb384c315ebc7e342dc4d25fa6a2e449b56d7861")]
 [assembly: System.Reflection.AssemblyProductAttribute("GrowerService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GrowerService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

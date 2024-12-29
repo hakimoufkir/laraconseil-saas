@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Stripe;
-using Consul;
 using MultiTenantStripeAPI.Models;
 using MultiTenantStripeAPI.Data;
 using MultiTenantStripeAPI.Middleware;
@@ -20,23 +19,21 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
-// Configure DbContext for Tenant Management
+// Configure In-Memory Database for Tenant Management
+builder.Services.AddDbContext<TenantDbContext>(options =>
+    options.UseInMemoryDatabase("MultiTenantDb"));
+
+// Commented SQL Server configuration; retain for future use
+/*
 builder.Services.AddDbContext<TenantDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+*/
 
-// Configure Consul for service discovery
-builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
-{
-    var address = builder.Configuration["CONSUL_HTTP_ADDR"] ?? "http://localhost:8500";
-    cfg.Address = new Uri(address);
-}));
-
-// Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowOrigin", policy =>
         policy
-            .WithOrigins("http://localhost:4200") // Replace with your frontend URL
+            .WithOrigins("http://localhost:4200","https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io") // Replace with your frontend URL
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()); // Allow cookies and credentials
@@ -56,35 +53,43 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowOrigin");
+
 app.UseHttpsRedirection();
 
 // Tenant Middleware to validate tenant requests
 app.UseMiddleware<TenantMiddleware>();
 
 app.UseAuthorization();
+
 app.MapControllers();
 
-// Register service with Consul
-var lifetime = app.Lifetime;
-var consulClient = app.Services.GetRequiredService<IConsulClient>();
-var registration = new AgentServiceRegistration
+// Seed data into the in-memory database
+void SeedData(IServiceProvider serviceProvider)
 {
-    ID = Guid.NewGuid().ToString(),
-    Name = builder.Configuration["SERVICE_NAME"] ?? "multitenant-stripe-api",
-    Address = builder.Configuration["SERVICE_HOST"] ?? "localhost",
-    Port = int.Parse(builder.Configuration["SERVICE_PORT"] ?? "5187")
-};
+    using var scope = serviceProvider.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
 
-lifetime.ApplicationStarted.Register(() =>
-{
-    consulClient.Agent.ServiceRegister(registration).Wait();
-    Console.WriteLine($"Service {registration.Name} registered with Consul at {registration.Address}:{registration.Port}");
-});
+    // Example test tenants
+    context.Tenants.Add(new Tenant
+    {
+        TenantId = Guid.NewGuid().ToString(),
+        TenantName = "Test Tenant 1",
+        Email = "tenant1@example.com",
+        SubscriptionStatus = "Active"
+    });
 
-lifetime.ApplicationStopped.Register(() =>
-{
-    consulClient.Agent.ServiceDeregister(registration.ID).Wait();
-    Console.WriteLine($"Service {registration.Name} deregistered from Consul.");
-});
+    context.Tenants.Add(new Tenant
+    {
+        TenantId = Guid.NewGuid().ToString(),
+        TenantName = "Test Tenant 2",
+        Email = "tenant2@example.com",
+        SubscriptionStatus = "Pending"
+    });
+
+    context.SaveChanges();
+}
+
+// Call the seeding method to populate in-memory database
+SeedData(app.Services);
 
 app.Run();
