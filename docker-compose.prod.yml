@@ -1,25 +1,4 @@
 services:
-  # SQL Server for database
-  # sqlserver:
-  #   image: lcrgacr.azurecr.io/sqlserver:latest
-  #   container_name: sqlserver-container
-  #   environment:
-  #     ACCEPT_EULA: "Y"
-  #     SA_PASSWORD: "StrongPassword@123"
-  #   ports:
-  #     - "1433:1433"
-  #   networks:
-  #     - OurNetworks-App
-  #   restart: always
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P StrongPassword@123 -Q 'SELECT 1'"]
-  #     interval: 20s
-  #     timeout: 5s
-  #     retries: 5
-  #   volumes:
-  #     - sql_data:/var/opt/mssql
-
-  # Keycloak for authentication and authorization
   keycloak:
     image: lcrgacr.azurecr.io/keycloak:latest
     container_name: keycloak
@@ -30,9 +9,8 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - OurNetworks-App
+      - our-network
 
-  # Discovery Service (Consul)
   consul:
     image: lcrgacr.azurecr.io/consul:latest
     container_name: consul
@@ -41,9 +19,8 @@ services:
       - "8600:8600/udp"
     command: agent -dev -client=0.0.0.0
     networks:
-      - OurNetworks-App
+      - our-network
 
-  # API Gateway
   apigateway:
     image: lcrgacr.azurecr.io/apigateway:latest
     container_name: apigateway
@@ -58,11 +35,10 @@ services:
       SERVICE_NAME: apigateway-service
       SERVICE_HOST: apigateway-service
       SERVICE_PORT: 5130
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
     networks:
-      - OurNetworks-App
+      - our-network
 
-  # Grower Service
   grower-service:
     image: lcrgacr.azurecr.io/grower-service:latest
     container_name: grower-service
@@ -73,16 +49,12 @@ services:
       SERVICE_NAME: grower-service
       SERVICE_HOST: grower-service
       SERVICE_PORT: 5003
-      ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=GrowerDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;TrustServerCertificate=True"
-
+      ASPNETCORE_ENVIRONMENT: Production
     depends_on:
-      # - sqlserver
       - consul
     networks:
-      - OurNetworks-App
+      - our-network
 
-  # Station Service
   station-service:
     image: lcrgacr.azurecr.io/station-service:latest
     container_name: station-service
@@ -93,16 +65,12 @@ services:
       SERVICE_NAME: station-service
       SERVICE_HOST: station-service
       SERVICE_PORT: 5004
-      ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=StationDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;TrustServerCertificate=True"
-
+      ASPNETCORE_ENVIRONMENT: Production
     depends_on:
-      # - sqlserver
       - consul
     networks:
-      - OurNetworks-App
+      - our-network
 
-  # MultiTenant Stripe API
   multitenant-api:
     image: lcrgacr.azurecr.io/multitenant-api:latest
     container_name: multitenant-api
@@ -113,26 +81,18 @@ services:
       SERVICE_NAME: multitenant-api
       SERVICE_HOST: multitenant-api
       SERVICE_PORT: 5005
-      ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=MultiTenantDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=False;TrustServerCertificate=True;"
-
-    # depends_on:
-      # - sqlserver
+      ASPNETCORE_ENVIRONMENT: Production
     networks:
-      - OurNetworks-App
+      - our-network
 
-  # Angular Frontend
   subscription-app:
     image: lcrgacr.azurecr.io/subscription-app:latest
     container_name: subscription-app
     ports:
       - "4200:80"
     networks:
-      - OurNetworks-App
-
-# volumes:
-#   sql_data:
+      - our-network
 
 networks:
-  OurNetworks-App:
+  our-network:
     driver: bridge

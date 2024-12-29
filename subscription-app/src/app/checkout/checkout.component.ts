@@ -20,7 +20,8 @@ export class CheckoutComponent {
 
   private stripe: Stripe | null = null;
   private stripePublicKey = 'pk_test_51MlVg6IQYGMLN4Gq4LqgxzlpJaVFyyunsO4uDGBVGF8Ratno5woLH0fvTGUkWy7RkROvhTytOA2lYOVTiLPwKA9L00xdT7GnMw'; // Replace with your Stripe Publishable Key
-  private apiEndpoint = 'https://multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io/api/Payment/create-checkout-session'; 
+  private apiEndpoint = 'http://localhost:5005/api/Payment/create-checkout-session'; 
+  // private apiEndpoint = 'https://multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io/api/Payment/create-checkout-session'; 
 
   constructor(private http: HttpClient) {
     this.initializeStripe();

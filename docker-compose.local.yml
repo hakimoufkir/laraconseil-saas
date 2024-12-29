@@ -1,27 +1,7 @@
 services:
-  # SQL Server for database
-  # sqlserver:
-  #   image: lcrgacr.azurecr.io/sqlserver:latest
-  #   container_name: sqlserver-container
-  #   environment:
-  #     ACCEPT_EULA: "Y"
-  #     SA_PASSWORD: "StrongPassword@123"
-  #   ports:
-  #     - "1433:1433"
-  #   networks:
-  #     - OurNetworks-App
-  #   restart: always
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P StrongPassword@123 -Q 'SELECT 1'"]
-  #     interval: 20s
-  #     timeout: 5s
-  #     retries: 5
-  #   volumes:
-  #     - sql_data:/var/opt/mssql
-
   # Keycloak for authentication and authorization
   keycloak:
-    image: lcrgacr.azurecr.io/keycloak:latest
+    image: quay.io/keycloak/keycloak:20.0.3
     container_name: keycloak
     environment:
       KEYCLOAK_ADMIN: admin
@@ -34,7 +14,7 @@ services:
 
   # Discovery Service (Consul)
   consul:
-    image: lcrgacr.azurecr.io/consul:latest
+    image: consul:1.14.6
     container_name: consul
     ports:
       - "8500:8500"
@@ -45,7 +25,9 @@ services:
 
   # API Gateway
   apigateway:
-    image: lcrgacr.azurecr.io/apigateway:latest
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
     container_name: apigateway
     ports:
       - "5130:5130"
@@ -64,7 +46,9 @@ services:
 
   # Grower Service
   grower-service:
-    image: lcrgacr.azurecr.io/grower-service:latest
+    build:
+      context: ./GrowerService
+      dockerfile: Dockerfile
     container_name: grower-service
     ports:
       - "5003:5003"
@@ -74,17 +58,16 @@ services:
       SERVICE_HOST: grower-service
       SERVICE_PORT: 5003
       ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=GrowerDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;TrustServerCertificate=True"
-
     depends_on:
-      # - sqlserver
       - consul
     networks:
       - OurNetworks-App
 
   # Station Service
   station-service:
-    image: lcrgacr.azurecr.io/station-service:latest
+    build:
+      context: ./StationService
+      dockerfile: Dockerfile
     container_name: station-service
     ports:
       - "5004:5004"
@@ -94,44 +77,51 @@ services:
       SERVICE_HOST: station-service
       SERVICE_PORT: 5004
       ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=StationDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;TrustServerCertificate=True"
-
     depends_on:
-      # - sqlserver
       - consul
     networks:
       - OurNetworks-App
 
   # MultiTenant Stripe API
   multitenant-api:
-    image: lcrgacr.azurecr.io/multitenant-api:latest
+    build:
+      context: ./MultiTenantStripeAPI
+      dockerfile: Dockerfile
     container_name: multitenant-api
     ports:
       - "5005:5005"
     environment:
-      CONSUL_HTTP_ADDR: "http://consul:8500"
-      SERVICE_NAME: multitenant-api
-      SERVICE_HOST: multitenant-api
-      SERVICE_PORT: 5005
       ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=MultiTenantDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=False;TrustServerCertificate=True;"
-
-    # depends_on:
-      # - sqlserver
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+      AllowedHosts: "*"
+      Stripe__SecretKey: "sk_test_51MlVg6IQYGMLN4GqZakooCBR7H8x0VuYkXSO528i61ursaYg4MM9UlqT9NF0VX7TIzGhGxvJOBvd4pR6Sn7AGBgy00tSclea1m"
+      Stripe__PublishableKey: "pk_test_51MlVg6IQYGMLN4Gq4LqgxzlpJaVFyyunsO4uDGBVGF8Ratno5woLH0fvTGUkWy7RkROvhTytOA2lYOVTiLPwKA9L00xdT7GnMw"
+      Stripe__WebhookSecret: "whsec_e27f4c42dad38e9be636d4a8acd796b688eb794348ec7642caa4a90ed96d33a7"
+      SERVICE_PORT: "5005"
+      SERVICE_NAME: "multitenant-stripe-api"
+      SERVICE_HOST: "localhost"
+      CONSUL_HTTP_ADDR: "http://consul:8500"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver-container,1433;Database=MultiTenantDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;MultipleActiveResultSets=True;TrustServerCertificate=True"
+    depends_on:
+      - consul
+      - keycloak
     networks:
       - OurNetworks-App
 
   # Angular Frontend
   subscription-app:
-    image: lcrgacr.azurecr.io/subscription-app:latest
+    build:
+      context: ./subscription-app
+      dockerfile: Dockerfile
     container_name: subscription-app
     ports:
       - "4200:80"
     networks:
       - OurNetworks-App
 
-# volumes:
-#   sql_data:
+volumes:
+  sql_data:
 
 networks:
   OurNetworks-App:

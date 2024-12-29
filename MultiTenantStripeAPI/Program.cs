@@ -3,6 +3,9 @@ using Stripe;
 using MultiTenantStripeAPI.Models;
 using MultiTenantStripeAPI.Data;
 using MultiTenantStripeAPI.Middleware;
+using MultiTenantStripeAPI.Services.Interfaces;
+using MultiTenantStripeAPI.Services.interfaces;
+using MultiTenantStripeAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +41,12 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials()); // Allow cookies and credentials
 });
+
+//services
+builder.Services.AddScoped<IStripeService, StripeService>();
+builder.Services.AddScoped<IKeycloakService, KeycloakService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddHttpClient<IKeycloakService, KeycloakService>();
 
 // Build the app
 var app = builder.Build();
