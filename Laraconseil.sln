@@ -13,6 +13,8 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI", "MultiTenantStripeAPI\MultiTenantStripeAPI.csproj", "{13019713-7B97-43ED-B230-4B5127242EAC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagerService", "MessagerService\MessagerService.csproj", "{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{13019713-7B97-43ED-B230-4B5127242EAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13019713-7B97-43ED-B230-4B5127242EAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13019713-7B97-43ED-B230-4B5127242EAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
