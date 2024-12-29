@@ -5,6 +5,8 @@
 *.userosscache
 *.sln.docstates
 
+files/
+
 # User-specific folders
 .vscode/
 .idea/

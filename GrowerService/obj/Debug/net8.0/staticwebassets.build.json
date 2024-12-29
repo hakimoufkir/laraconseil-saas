@@ -1,12 +1,11 @@
 {
   "Version": 1,
-  "Hash": "UCCJ6i48w7KZRK9+MjsQD3pfU6qxKSHBKPoKVzBa6hw=",
+  "Hash": "OGtbIkc52lG/vFwMgNmd9sF8nSCAz0SJhSZDSz/0abI=",
   "Source": "GrowerService",
   "BasePath": "_content/GrowerService",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": [],
-  "Endpoints": []
+  "Assets": []
 }
