@@ -10,24 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Log in to Azure Container Registry (ACR)
       - name: Log in to ACR
         run: echo ${{ secrets.ACR_PASSWORD }} | docker login lcrgacr.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-      # Build and Push Docker Images
       - name: Build and Push Images
         run: |
           # Navigate to the deploys directory
           cd deploys
-          
-          # Define the services and build/push them
-          for service in apigateway grower-service station-service multitenant-api messager-service subscription-app; do
-            echo "Building and tagging $service..."
-            docker build -t lcrgacr.azurecr.io/$service:latest ../$service
-            echo "Pushing $service to ACR..."
-            docker push lcrgacr.azurecr.io/$service:latest
-          done
+
+          # Ensure the script is executable
+          chmod +x build-and-push.sh
+
+          # Execute the script
+          ./build-and-push.sh
