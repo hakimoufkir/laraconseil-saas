@@ -19,15 +19,15 @@ namespace MessagerService.Services
             _senderEmail = senderEmail;
         }
 
-        public async Task SendEmailAsync(string recipientEmail, string subject, string body, CancellationToken cancellationToken = default)
+        public async Task SendEmailAsync(string recipientEmail, string subject, string htmlBody, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(recipientEmail)) throw new ArgumentNullException(nameof(recipientEmail));
             if (string.IsNullOrEmpty(subject)) throw new ArgumentNullException(nameof(subject));
-            if (string.IsNullOrEmpty(body)) throw new ArgumentNullException(nameof(body));
+            if (string.IsNullOrEmpty(htmlBody)) throw new ArgumentNullException(nameof(htmlBody));
 
             var emailContent = new EmailContent(subject)
             {
-                PlainText = body
+                Html  = htmlBody
             };
 
             var emailMessage = new EmailMessage(_senderEmail, recipientEmail, emailContent);

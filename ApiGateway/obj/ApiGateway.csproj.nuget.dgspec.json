@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -50,10 +51,6 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
-            "Consul": {
-              "target": "Package",
-              "version": "[1.7.14.6, )"
-            },
             "Microsoft.Extensions.Configuration.Json": {
               "target": "Package",
               "version": "[8.0.0, )"

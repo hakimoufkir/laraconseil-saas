@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrowerService", "GrowerServ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationService", "StationService\StationService.csproj", "{E88CCE74-91C4-4CB6-9678-E3AE76EF8A25}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{BD62F869-689A-45BA-AB43-AC0FADD03BD6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI", "MultiTenantStripeAPI\MultiTenantStripeAPI.csproj", "{13019713-7B97-43ED-B230-4B5127242EAC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagerService", "MessagerService\MessagerService.csproj", "{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}"

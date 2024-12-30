@@ -1,5 +1,3 @@
-using Consul;
-
 namespace StationService
 {
     public class Program
@@ -15,14 +13,7 @@ namespace StationService
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            // Configure Consul for service discovery
-            builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(cfg =>
-            {
-                var address = builder.Configuration["CONSUL_HTTP_ADDR"] ?? "http://localhost:8500";
-                cfg.Address = new Uri(address);
-            }));
+            builder.Services.AddSwaggerGen();           
 
             var app = builder.Build();
 
@@ -37,29 +28,7 @@ namespace StationService
             }
 
             app.UseAuthorization();
-            app.MapControllers();
-
-            // Register service with Consul
-            var lifetime = app.Lifetime;
-            var consulClient = app.Services.GetRequiredService<IConsulClient>();
-            var registration = new AgentServiceRegistration
-            {
-                ID = Guid.NewGuid().ToString(),
-                Name = builder.Configuration["SERVICE_NAME"] ?? "default-service",
-                Address = builder.Configuration["SERVICE_HOST"] ?? "localhost",
-                Port = int.Parse(builder.Configuration["SERVICE_PORT"] ?? "5000")
-            };
-
-            lifetime.ApplicationStarted.Register(() =>
-            {
-                consulClient.Agent.ServiceRegister(registration).Wait();
-            });
-
-            lifetime.ApplicationStopped.Register(() =>
-            {
-                consulClient.Agent.ServiceDeregister(registration.ID).Wait();
-            });
-
+            app.MapControllers();            
             app.Run();
         }
     }

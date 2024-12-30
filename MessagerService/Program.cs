@@ -1,4 +1,10 @@
+using Consul;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Explicitly configure Kestrel to listen on the assigned port.
+var port = builder.Configuration["SERVICE_PORT"] ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Add services to the container.
 builder.Services.AddSingleton(provider =>
@@ -18,10 +24,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{builder.Configuration["SERVICE_NAME"]} API v1");
+    });
 }
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();
