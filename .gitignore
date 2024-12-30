@@ -6,6 +6,7 @@
 *.sln.docstates
 
 files/
+docker-compose.local.yml
 
 # User-specific folders
 .vscode/

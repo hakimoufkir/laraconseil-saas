@@ -25,11 +25,13 @@ services:
       - station-service
       - messager-service
     environment:
-      
+      ASPNETCORE_ENVIRONMENT: Development
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+      AllowedHosts: "*"
       SERVICE_NAME: apigateway-service
       SERVICE_HOST: apigateway-service
       SERVICE_PORT: 5130
-      ASPNETCORE_ENVIRONMENT: Development
     networks:
       - OurNetworks-App
 
@@ -42,11 +44,13 @@ services:
     ports:
       - "5003:5003"
     environment:
-      
+      ASPNETCORE_ENVIRONMENT: Development
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+      AllowedHosts: "*"
       SERVICE_NAME: grower-service
       SERVICE_HOST: grower-service
       SERVICE_PORT: 5003
-      ASPNETCORE_ENVIRONMENT: Development      
     networks:
       - OurNetworks-App
 
@@ -59,11 +63,13 @@ services:
     ports:
       - "5004:5004"
     environment:
-      
+      ASPNETCORE_ENVIRONMENT: Development
+      Logging__LogLevel__Default: "Information"
+      Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+      AllowedHosts: "*"
       SERVICE_NAME: station-service
       SERVICE_HOST: station-service
       SERVICE_PORT: 5004
-      ASPNETCORE_ENVIRONMENT: Development
       
     networks:
       - OurNetworks-App
@@ -86,10 +92,8 @@ services:
       Stripe__WebhookSecret: "whsec_e27f4c42dad38e9be636d4a8acd796b688eb794348ec7642caa4a90ed96d33a7"
       SERVICE_PORT: "5005"
       SERVICE_NAME: "multitenant-stripe-api"
-      SERVICE_HOST: "localhost"
-      
-    depends_on:
-      
+      SERVICE_HOST: "localhost"      
+    depends_on:      
       - keycloak
     networks:
       - OurNetworks-App
@@ -126,9 +130,6 @@ services:
       - "4200:80"
     networks:
       - OurNetworks-App
-
-volumes:
-  sql_data:
 
 networks:
   OurNetworks-App:
