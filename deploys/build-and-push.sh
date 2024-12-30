@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status.
 
 # Navigate to the deploys folder (optional if already in this folder)
 cd "$(dirname "$0")"
