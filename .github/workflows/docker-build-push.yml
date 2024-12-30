@@ -25,7 +25,7 @@ jobs:
           cd deploys
           
           # Define the services and build/push them
-          for service in ApiGateway GrowerService StationService MultiTenantStripeAPI MessagerService SubscriptionApp; do
+          for service in apigateway grower-service station-service multitenant-api messager-service subscription-app; do
             echo "Building and tagging $service..."
             docker build -t lcrgacr.azurecr.io/$service:latest ../$service
             echo "Pushing $service to ACR..."
