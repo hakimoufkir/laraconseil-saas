@@ -36,10 +36,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowOrigin", policy =>
         policy
-            .WithOrigins("http://localhost:4200","https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io") // Replace with your frontend URL
+            .WithOrigins("http://localhost:4200",
+            "https://multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io") 
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials()); // Allow cookies and credentials
+            .AllowCredentials());
 });
 
 //services

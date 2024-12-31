@@ -84,14 +84,18 @@ services:
     networks:
       - our-network
 
-  # Angular Frontend
+# Angular Frontend
   subscription-app:
-    image: ${SUBSCRIPTION_APP_IMAGE}
+    build:
+      context: ./subscription-app
+      dockerfile: Dockerfile
+      args:
+        CONFIGURATION: ${ANGULAR_BUILD_CONFIGURATION}  # Pass `development` or `production`
     container_name: subscription-app
     ports:
       - "${SUBSCRIPTION_APP_PORT}:80"
-    depends_on:      
-      - sqlserver
+    environment:
+      PORT: ${SUBSCRIPTION_APP_PORT}
     networks:
       - our-network
 
