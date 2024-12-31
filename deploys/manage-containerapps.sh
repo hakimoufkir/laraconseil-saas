@@ -4,7 +4,7 @@
 RESOURCE_GROUP="lcrg"
 
 # Array of container apps to manage
-declare -a CONTAINER_APPS=("grower-service" "station-service" "apigateway" "subscription-app" "multitenant-api")
+declare -a CONTAINER_APPS=("apigateway" "subscription-app" "multitenant-api")
 
 # Authenticate with Azure (credentials provided via GitHub Actions)
 az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"

@@ -10,8 +10,6 @@ ACR_NAME="lcrgacr.azurecr.io"
 # Services and their paths (adjusted relative to the deploys folder)
 declare -A services=(
   ["apigateway"]="../ApiGateway"
-  ["grower-service"]="../GrowerService"
-  ["station-service"]="../StationService"
   ["multitenant-api"]="../MultiTenantStripeAPI"
   ["messager-service"]="../MessagerService"
   ["subscription-app"]="../subscription-app"

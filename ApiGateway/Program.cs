@@ -11,7 +11,7 @@ namespace ApiGateway
             var builder = WebApplication.CreateBuilder(args);
 
             // Explicitly configure Kestrel to listen on the assigned port.
-            var port = builder.Configuration["SERVICE_PORT"] ?? "8080";
+            var port = builder.Configuration["SERVICE_PORT"] ?? "5130";
             builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
             // Add Ocelot and Consul configurations
@@ -29,10 +29,7 @@ namespace ApiGateway
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{builder.Configuration["SERVICE_NAME"]} API v1");
-                });
+                app.UseSwaggerUI();
             }
 
             app.UseAuthorization();

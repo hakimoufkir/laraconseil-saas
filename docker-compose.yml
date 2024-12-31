@@ -1,138 +1,103 @@
 services:
   # SQL Server for database
-  # sqlserver:
-  #   image: lcrgacr.azurecr.io/sqlserver:latest
-  #   container_name: sqlserver-container
-  #   environment:
-  #     ACCEPT_EULA: "Y"
-  #     SA_PASSWORD: "StrongPassword@123"
-  #   ports:
-  #     - "1433:1433"
-  #   networks:
-  #     - OurNetworks-App
-  #   restart: always
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P StrongPassword@123 -Q 'SELECT 1'"]
-  #     interval: 20s
-  #     timeout: 5s
-  #     retries: 5
-  #   volumes:
-  #     - sql_data:/var/opt/mssql
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver-container
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SQL_SERVER_PASSWORD}
+    ports:
+      - "${SQL_SERVER_PORT}:${SQL_SERVER_PORT}"
+    networks:
+      - our-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${SQL_SERVER_PASSWORD} -Q 'SELECT 1'"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - sql_data:/var/opt/mssql
 
   # Keycloak for authentication and authorization
   keycloak:
-    image: lcrgacr.azurecr.io/keycloak:latest
+    image: ${KEYCLOAK_IMAGE}
     container_name: keycloak
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     command: start-dev
     ports:
-      - "8080:8080"
+      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     networks:
-      - OurNetworks-App
-
-  # Discovery Service (Consul)
-  consul:
-    image: lcrgacr.azurecr.io/consul:latest
-    container_name: consul
-    ports:
-      - "8500:8500"
-      - "8600:8600/udp"
-    command: agent -dev -client=0.0.0.0
-    networks:
-      - OurNetworks-App
+      - our-network
 
   # API Gateway
   apigateway:
-    image: lcrgacr.azurecr.io/apigateway:latest
+    image: ${APIGATEWAY_IMAGE}
     container_name: apigateway
     ports:
-      - "5130:5130"
-    depends_on:
-      - consul
-      - grower-service
-      - station-service
+      - "${APIGATEWAY_PORT}:${APIGATEWAY_PORT}"
+    depends_on:    
+      - sqlserver
     environment:
-      CONSUL_HTTP_ADDR: "http://consul:8500"
-      SERVICE_NAME: apigateway-service
-      SERVICE_HOST: apigateway-service
-      SERVICE_PORT: 5130
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      SERVICE_PORT: ${APIGATEWAY_PORT}
     networks:
-      - OurNetworks-App
-
-  # Grower Service
-  grower-service:
-    image: lcrgacr.azurecr.io/grower-service:latest
-    container_name: grower-service
-    ports:
-      - "5003:5003"
-    environment:
-      CONSUL_HTTP_ADDR: "http://consul:8500"
-      SERVICE_NAME: grower-service
-      SERVICE_HOST: grower-service
-      SERVICE_PORT: 5003
-      ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=GrowerDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;TrustServerCertificate=True"
-
-    depends_on:
-      # - sqlserver
-      - consul
-    networks:
-      - OurNetworks-App
-
-  # Station Service
-  station-service:
-    image: lcrgacr.azurecr.io/station-service:latest
-    container_name: station-service
-    ports:
-      - "5004:5004"
-    environment:
-      CONSUL_HTTP_ADDR: "http://consul:8500"
-      SERVICE_NAME: station-service
-      SERVICE_HOST: station-service
-      SERVICE_PORT: 5004
-      ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=StationDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=True;TrustServerCertificate=True"
-
-    depends_on:
-      # - sqlserver
-      - consul
-    networks:
-      - OurNetworks-App
+      - our-network
 
   # MultiTenant Stripe API
   multitenant-api:
-    image: lcrgacr.azurecr.io/multitenant-api:latest
+    image: ${MULTITENANT_API_IMAGE}
     container_name: multitenant-api
     ports:
-      - "5005:5005"
+      - "${MULTITENANT_API_PORT}:${MULTITENANT_API_PORT}"
     environment:
-      CONSUL_HTTP_ADDR: "http://consul:8500"
-      SERVICE_NAME: multitenant-api
-      SERVICE_HOST: multitenant-api
-      SERVICE_PORT: 5005
-      ASPNETCORE_ENVIRONMENT: Development
-      # ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=MultiTenantDb;User Id=sa;Password=StrongPassword@123;Trusted_Connection=False;TrustServerCertificate=True;"
-
-    # depends_on:
-      # - sqlserver
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY}
+      Stripe__PublishableKey: ${STRIPE_PUBLISHABLE_KEY}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET}
+      ConnectionStrings__AzureServiceBus: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
+      SERVICE_PORT: ${MULTITENANT_API_PORT}
+    depends_on:      
+      - keycloak
+      - sqlserver
     networks:
-      - OurNetworks-App
+      - our-network
+
+  # Messager Service
+  messager-service:
+    image: ${MESSAGER_SERVICE_IMAGE}
+    container_name: messager-service
+    ports:
+      - "${MESSAGER_SERVICE_PORT}:${MESSAGER_SERVICE_PORT}"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__AzureServiceBus: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
+      AzureCommunicationServices__ConnectionString: ${AZURE_COMMUNICATION_STRING}
+      AzureCommunicationServices__SenderEmail: ${AZURE_SENDER_EMAIL}
+      ServiceBus__TopicName: ${SERVICE_BUS_TOPIC_NAME}
+      ServiceBus__SubscriptionName: ${SERVICE_BUS_SUBSCRIPTION_NAME}
+      SERVICE_PORT: ${MESSAGER_SERVICE_PORT}
+    depends_on:      
+      - sqlserver
+    networks:
+      - our-network
 
   # Angular Frontend
   subscription-app:
-    image: lcrgacr.azurecr.io/subscription-app:latest
+    image: ${SUBSCRIPTION_APP_IMAGE}
     container_name: subscription-app
     ports:
-      - "4200:80"
+      - "${SUBSCRIPTION_APP_PORT}:80"
+    depends_on:      
+      - sqlserver
     networks:
-      - OurNetworks-App
+      - our-network
 
-# volumes:
-#   sql_data:
+volumes:
+  sql_data:
 
 networks:
-  OurNetworks-App:
+  our-network:
     driver: bridge

@@ -1,6 +1,0 @@
-@GrowerService_HostAddress = http://localhost:5104
-
-GET {{GrowerService_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
