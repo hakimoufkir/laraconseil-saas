@@ -48,6 +48,11 @@ builder.Services.AddScoped<IKeycloakService, KeycloakService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddHttpClient<IKeycloakService, KeycloakService>();
 
+
+builder.Services.AddSingleton<ServiceBusPublisher>(sp =>
+    new ServiceBusPublisher(builder.Configuration.GetConnectionString("AzureServiceBus")));
+
+
 // Build the app
 var app = builder.Build();
 

@@ -4,6 +4,7 @@ using MultiTenantStripeAPI.Services.interfaces;
 using MultiTenantStripeAPI.Services.Interfaces;
 using Stripe;
 using Stripe.Checkout;
+using System.Text.Json;
 
 namespace MultiTenantStripeAPI.Services
 {
@@ -12,12 +13,18 @@ namespace MultiTenantStripeAPI.Services
         private readonly StripeOptions _stripeOptions;
         private readonly ITenantService _tenantService;
         private readonly IKeycloakService _keycloakService;
+        private readonly ServiceBusPublisher _publisher;
 
-        public StripeService(IOptions<StripeOptions> stripeOptions, ITenantService tenantService, IKeycloakService keycloakService)
+        public StripeService(
+            IOptions<StripeOptions> stripeOptions,
+            ITenantService tenantService,
+            IKeycloakService keycloakService,
+            ServiceBusPublisher publisher)
         {
             _stripeOptions = stripeOptions.Value ?? throw new ArgumentNullException(nameof(stripeOptions));
             _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
             _keycloakService = keycloakService ?? throw new ArgumentNullException(nameof(keycloakService));
+            _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
             StripeConfiguration.ApiKey = _stripeOptions.SecretKey;
         }
 
@@ -33,18 +40,16 @@ namespace MultiTenantStripeAPI.Services
                 Customer = customerId, // Associate session with customer
                 PaymentMethodTypes = new List<string> { "card" },
                 LineItems = new List<SessionLineItemOptions>
-        {
-            new SessionLineItemOptions
-            {
-                Price = "price_1Qb9QMIQYGMLN4GqsyWZd0VH",
-                Quantity = 1,
-            },
-        },
+                {
+                    new SessionLineItemOptions
+                    {
+                        Price = "price_1Qb9QMIQYGMLN4GqsyWZd0VH",
+                        Quantity = 1,
+                    },
+                },
                 Mode = "subscription",
                 SuccessUrl = "http://localhost:4200/success",
                 CancelUrl = "http://localhost:4200/cancel",
-                // SuccessUrl = "https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io/success",
-                // CancelUrl = "https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io/cancel",
             };
 
             var service = new SessionService();
@@ -59,58 +64,82 @@ namespace MultiTenantStripeAPI.Services
                 return;
             }
 
-            // Check for Customer ID or Customer Email
-            string customerId = session.CustomerId;
-            string customerEmail = session.CustomerDetails?.Email;
+            string? customerId = session.CustomerId;
+            string? customerEmail = session.CustomerDetails?.Email;
 
-            if (string.IsNullOrWhiteSpace(customerId) && string.IsNullOrWhiteSpace(customerEmail))
-            {
-                Console.WriteLine("Both Customer ID and Customer Email are missing in the session.");
-                return;
-            }
-
-            Console.WriteLine($"Checkout Session Completed. Customer ID: {customerId}, Email: {customerEmail}");
-
-            // If Customer ID is missing, use Customer Email for further processing
-            if (string.IsNullOrWhiteSpace(customerId) && !string.IsNullOrWhiteSpace(customerEmail))
-            {
-                Console.WriteLine($"Customer ID is missing. Proceeding with Customer Email: {customerEmail}");
-            }
-
-            // Ensure we have a valid email for tenant operations
             if (string.IsNullOrWhiteSpace(customerEmail))
             {
-                Console.WriteLine("Customer Email is missing, cannot proceed.");
+                Console.WriteLine("Customer email is missing. Cannot proceed.");
                 return;
             }
 
-            // Retrieve or create tenant
             Tenant tenant;
+
             try
             {
+                // Check if the tenant already exists
                 tenant = _tenantService.GetTenantByEmail(customerEmail);
                 Console.WriteLine($"Tenant found for email: {customerEmail}");
             }
             catch (InvalidOperationException)
             {
                 Console.WriteLine($"No tenant found with email '{customerEmail}'. Creating a new tenant.");
+
+                // Attempt to create the tenant
                 string tenantName = session.CustomerDetails?.Name ?? "Unknown Tenant";
-                tenant = _tenantService.CreateTenant(tenantName, customerEmail);
+                try
+                {
+                    tenant = _tenantService.CreateTenant(tenantName, customerEmail);
+
+                    // Notify the customer about tenant creation
+                    await SendNotificationAsync("Tenant Created", tenant.Email, new
+                    {
+                        TenantName = tenant.TenantName,
+                        Message = "Your tenant has been successfully created!"
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error creating tenant for email '{customerEmail}': {ex.Message}");
+                    return;
+                }
             }
 
-            // Update subscription status
-            _tenantService.UpdateTenantStatus(tenant, "Active");
-            Console.WriteLine("Tenant subscription status updated to Active.");
-
-            // Create realm and user in Keycloak
             try
             {
-                await _keycloakService.CreateRealmAndUserAsync(tenant.TenantName, tenant.Email);
-                Console.WriteLine("Keycloak realm and user created successfully.");
+                // Update subscription status
+                _tenantService.UpdateTenantStatus(tenant, "Active");
+                Console.WriteLine("Tenant subscription status updated to Active.");
+
+                // Notify the customer about subscription status
+                await SendNotificationAsync("Subscription Activated", tenant.Email, new
+                {
+                    TenantName = tenant.TenantName,
+                    Message = "Your subscription has been activated."
+                });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating Keycloak realm and user: {ex.Message}");
+                Console.WriteLine($"Error updating subscription status for tenant '{tenant.TenantName}': {ex.Message}");
+            }
+
+            try
+            {
+                // Create realm and user in Keycloak
+                await _keycloakService.CreateRealmAndUserAsync(tenant.TenantName, tenant.Email);
+                Console.WriteLine("Keycloak realm and user created successfully.");
+
+                // Notify the customer about realm creation
+                await SendNotificationAsync("Realm Created", tenant.Email, new
+                {
+                    TenantName = tenant.TenantName,
+                    Realm = tenant.TenantName,
+                    Message = "Your realm has been successfully created. Please check your email for login details."
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating Keycloak realm and user for tenant '{tenant.TenantName}': {ex.Message}");
             }
         }
 
@@ -146,6 +175,14 @@ namespace MultiTenantStripeAPI.Services
             // Update tenant subscription status
             _tenantService.UpdateTenantStatus(tenant, subscription.Status);
             Console.WriteLine($"Tenant subscription status updated to: {subscription.Status}");
+
+            // Notify the customer about subscription update
+            await SendNotificationAsync("Subscription Updated", tenant.Email, new
+            {
+                TenantName = tenant.TenantName,
+                Status = subscription.Status,
+                Message = $"Your subscription status has been updated to {subscription.Status}."
+            });
         }
 
         public async Task HandleSubscriptionDeleted(Event stripeEvent)
@@ -179,6 +216,29 @@ namespace MultiTenantStripeAPI.Services
             // Update tenant subscription status
             _tenantService.UpdateTenantStatus(tenant, "Canceled");
             Console.WriteLine("Tenant subscription status updated to Canceled.");
+
+            // Notify the customer about subscription cancellation
+            await SendNotificationAsync("Subscription Canceled", tenant.Email, new
+            {
+                TenantName = tenant.TenantName,
+                Message = "Your subscription has been canceled."
+            });
+        }
+
+        private async Task SendNotificationAsync(string subject, string recipientEmail, object payload)
+        {
+            var notificationMessage = new
+            {
+                Subject = subject,
+                RecipientEmail = recipientEmail,
+                Payload = payload
+            };
+
+            string message = JsonSerializer.Serialize(notificationMessage);
+
+            await _publisher.PublishMessageAsync("notifications", message);
+
+            Console.WriteLine($"Notification sent: {message}");
         }
     }
 }
