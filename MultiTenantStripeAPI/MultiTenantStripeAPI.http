@@ -1,6 +1,0 @@
-@MultiTenantStripeAPI_HostAddress = http://localhost:5187
-
-GET {{MultiTenantStripeAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

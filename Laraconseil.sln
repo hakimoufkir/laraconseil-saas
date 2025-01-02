@@ -5,9 +5,19 @@ VisualStudioVersion = 17.12.35527.113 d17.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{972421AE-3F40-45DD-B069-BD8BE3186065}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI", "MultiTenantStripeAPI\MultiTenantStripeAPI.csproj", "{13019713-7B97-43ED-B230-4B5127242EAC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagerService", "MessagerService\MessagerService.csproj", "{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7D268962-573F-428A-9367-E6D9A4EA71B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Api", "MultiTenantStripeAPI\src\MultiTenantStripeAPI.Api\MultiTenantStripeAPI.Api.csproj", "{633318A9-E462-4994-8504-18874E77C675}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Application", "MultiTenantStripeAPI\src\MultiTenantStripeAPI.Application\MultiTenantStripeAPI.Application.csproj", "{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Domain", "MultiTenantStripeAPI\src\MultiTenantStripeAPI.Domain\MultiTenantStripeAPI.Domain.csproj", "{7C5A38B9-9921-4948-8D59-3289C15B6F9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Infrastructure", "MultiTenantStripeAPI\src\MultiTenantStripeAPI.Infrastructure\MultiTenantStripeAPI.Infrastructure.csproj", "{D424FE84-1679-4EDA-A044-90A949E2A279}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Shared", "MultiTenantStripeAPI\src\MultiTenantStripeAPI.Shared\MultiTenantStripeAPI.Shared.csproj", "{65E8641A-7038-4611-8DCB-51E50E5F895B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,8 +41,35 @@ Global
 		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADED214F-AD9F-4F87-98C4-BD33C9AC42A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{633318A9-E462-4994-8504-18874E77C675}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{633318A9-E462-4994-8504-18874E77C675}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{633318A9-E462-4994-8504-18874E77C675}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{633318A9-E462-4994-8504-18874E77C675}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C5A38B9-9921-4948-8D59-3289C15B6F9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C5A38B9-9921-4948-8D59-3289C15B6F9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C5A38B9-9921-4948-8D59-3289C15B6F9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C5A38B9-9921-4948-8D59-3289C15B6F9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D424FE84-1679-4EDA-A044-90A949E2A279}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D424FE84-1679-4EDA-A044-90A949E2A279}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D424FE84-1679-4EDA-A044-90A949E2A279}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D424FE84-1679-4EDA-A044-90A949E2A279}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution	
+		{633318A9-E462-4994-8504-18874E77C675} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
+		{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
+		{7C5A38B9-9921-4948-8D59-3289C15B6F9F} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
+		{D424FE84-1679-4EDA-A044-90A949E2A279} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
+		{65E8641A-7038-4611-8DCB-51E50E5F895B} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
 	EndGlobalSection
 EndGlobal

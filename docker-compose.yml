@@ -48,17 +48,22 @@ services:
 
   # MultiTenant Stripe API
   multitenant-api:
-    image: ${MULTITENANT_API_IMAGE}
+    image: ${MULTITENANT_API_IMAGE} # Reference to the prebuilt image
     container_name: multitenant-api
     ports:
-      - "${MULTITENANT_API_PORT}:${MULTITENANT_API_PORT}"
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__AzureServiceBus: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
+      ConnectionStrings__DefaultSQLConnection: ${DEFAULT_SQL_CONNECTION}
+      SERVICE_BUS_TOPIC_NAME: ${SERVICE_BUS_TOPIC_NAME}
+      SERVICE_BUS_SUBSCRIPTION_NAME: ${SERVICE_BUS_SUBSCRIPTION_NAME}
+      AZURE_COMMUNICATION_CONNECTION_STRING: ${AZURE_COMMUNICATION_CONNECTION_STRING}
+      AZURE_COMMUNICATION_SENDER_EMAIL: ${AZURE_COMMUNICATION_SENDER_EMAIL}
+      SERVICE_PORT: ${SERVICE_PORT}
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
       Stripe__PublishableKey: ${STRIPE_PUBLISHABLE_KEY}
       Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET}
-      ConnectionStrings__AzureServiceBus: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
-      SERVICE_PORT: ${MULTITENANT_API_PORT}
     depends_on:      
       - keycloak
       - sqlserver
