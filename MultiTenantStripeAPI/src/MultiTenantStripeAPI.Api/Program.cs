@@ -8,6 +8,28 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Define required configuration keys for MultiTenant Service
+var requiredKeysMultiTenant = new Dictionary<string, string>
+{
+    { "ConnectionStrings:AzureServiceBus", "The Azure Service Bus connection string is missing for MultiTenant Service." },
+    { "ConnectionStrings:DefaultSQLConnection", "The SQL database connection string is missing for MultiTenant Service." },
+    { "Stripe:SecretKey", "The Stripe secret key is missing for MultiTenant Service." },
+    { "Stripe:PublishableKey", "The Stripe publishable key is missing for MultiTenant Service." },
+    { "Stripe:WebhookSecret", "The Stripe webhook secret is missing for MultiTenant Service." },
+    { "SERVICE_PORT", "The MultiTenant Service port is missing." }
+};
+
+
+// Verify all required keys for MultiTenant Service
+foreach (var key in requiredKeysMultiTenant.Keys)
+{
+    var value = builder.Configuration[key];
+    if (string.IsNullOrEmpty(value))
+    {
+        throw new ArgumentNullException(key, requiredKeysMultiTenant[key]);
+    }
+}
+
 // Explicitly configure Kestrel to listen on the assigned port
 var port = builder.Configuration["SERVICE_PORT"] ?? "5006";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
@@ -40,7 +62,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:4200",
-                "https://multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io")
+                "https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());

@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Infras
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTenantStripeAPI.Shared", "MultiTenantStripeAPI\src\MultiTenantStripeAPI.Shared\MultiTenantStripeAPI.Shared.csproj", "{65E8641A-7038-4611-8DCB-51E50E5F895B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeycloakServiceAPI", "KeycloakServiceAPI\KeycloakServiceAPI.csproj", "{EE8D6E96-C6D9-4E59-BE1D-6B59C91F2D5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,11 +63,15 @@ Global
 		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65E8641A-7038-4611-8DCB-51E50E5F895B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE8D6E96-C6D9-4E59-BE1D-6B59C91F2D5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE8D6E96-C6D9-4E59-BE1D-6B59C91F2D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE8D6E96-C6D9-4E59-BE1D-6B59C91F2D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE8D6E96-C6D9-4E59-BE1D-6B59C91F2D5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution	
+	GlobalSection(NestedProjects) = preSolution
 		{633318A9-E462-4994-8504-18874E77C675} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
 		{3CD6783B-E1E8-4CD3-9DA3-F0A311CB812B} = {7D268962-573F-428A-9367-E6D9A4EA71B5}
 		{7C5A38B9-9921-4948-8D59-3289C15B6F9F} = {7D268962-573F-428A-9367-E6D9A4EA71B5}

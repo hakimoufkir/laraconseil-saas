@@ -17,9 +17,6 @@ namespace MultiTenantStripeAPI.Application.Services
 
         public async Task PublishMessageAsync(string topicName, string message)
         {
-            if (string.IsNullOrEmpty(topicName)) throw new ArgumentException("Topic name cannot be null or empty.", nameof(topicName));
-            if (string.IsNullOrEmpty(message)) throw new ArgumentException("Message cannot be null or empty.", nameof(message));
-
             var sender = _client.CreateSender(topicName);
 
             try

@@ -3,6 +3,25 @@ using MessagerService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Define required configuration keys
+var requiredKeys = new Dictionary<string, string>
+{
+    { "AzureCommunicationServices:ConnectionString", "The Azure Communication Services connection string is missing." },
+    { "AzureCommunicationServices:SenderEmail", "The Azure Communication Services sender email is missing." },
+    { "ConnectionStrings:AzureServiceBus", "The Azure Service Bus connection string is missing." },
+    { "SERVICE_PORT", "The service port is missing." }
+};
+
+// Verify all required keys exist
+foreach (var key in requiredKeys.Keys)
+{
+    var value = builder.Configuration[key];
+    if (string.IsNullOrEmpty(value))
+    {
+        throw new ArgumentNullException(key, requiredKeys[key]);
+    }
+}
+
 // Explicitly configure Kestrel to listen on the assigned port
 var port = builder.Configuration["SERVICE_PORT"] ?? "5006";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");

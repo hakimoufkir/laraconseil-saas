@@ -9,6 +9,7 @@ ACR_NAME="lcrgacr.azurecr.io"
 
 # Services and their paths (adjusted relative to the deploys folder)
 declare -A services=(
+  ["keycloak-service-api"]="../KeycloakServiceAPI"
   ["apigateway"]="../ApiGateway"
   ["multitenant-api"]="../MultiTenantStripeAPI"
   ["messager-service"]="../MessagerService"

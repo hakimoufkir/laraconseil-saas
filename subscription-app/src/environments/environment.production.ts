@@ -1,6 +1,6 @@
 export const environment = {
     production: true,
-    stripePublicKey: 'pk_live_51MlVg6IQYGMLN4Gq0yqeRVnnQVVR7McwZoAGZgMA1Cowy0y87qteNzvsMhHu17t1Eu87MuzfVTr9fVipPIDpWNjs00oNUWsvPq',
+    stripePublicKey: 'pk_test_51MlVg6IQYGMLN4Gq4LqgxzlpJaVFyyunsO4uDGBVGF8Ratno5woLH0fvTGUkWy7RkROvhTytOA2lYOVTiLPwKA9L00xdT7GnMw',
     apiEndpoint: 'https://multitenant-api.gentlegrass-3889baac.westeurope.azurecontainerapps.io/api/Payment/create-checkout-session',    
   };
   
