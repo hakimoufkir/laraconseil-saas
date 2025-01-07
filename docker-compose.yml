@@ -43,8 +43,6 @@ services:
       ConnectionStrings__AzureServiceBus: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
       AzureCommunicationServices__ConnectionString: ${AZURE_COMMUNICATION_CONNECTION_STRING}
       AzureCommunicationServices__SenderEmail: ${AZURE_COMMUNICATION_SENDER_EMAIL}
-      ServiceBus__TopicName: ${SERVICE_BUS_TOPIC_NAME}
-      ServiceBus__SubscriptionName: ${SERVICE_BUS_SUBSCRIPTION_NAME}
       SERVICE_PORT: ${MESSAGER_SERVICE_PORT}
     networks:
       - our-network

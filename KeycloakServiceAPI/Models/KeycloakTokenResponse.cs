@@ -5,28 +5,28 @@ namespace KeycloakServiceAPI.Models
     public class KeycloakTokenResponse
     {
         [JsonPropertyName("access_token")]
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; set; }
+        public int? ExpiresIn { get; set; }
 
         [JsonPropertyName("refresh_expires_in")]
-        public int RefreshExpiresIn { get; set; }
+        public int? RefreshExpiresIn { get; set; }
 
         [JsonPropertyName("refresh_token")]
-        public string RefreshToken { get; set; }
+        public string? RefreshToken { get; set; }
 
         [JsonPropertyName("token_type")]
-        public string TokenType { get; set; }
+        public string? TokenType { get; set; }
 
         [JsonPropertyName("not-before-policy")]
-        public int NotBeforePolicy { get; set; }
+        public int? NotBeforePolicy { get; set; }
 
         [JsonPropertyName("session_state")]
-        public string SessionState { get; set; }
+        public string? SessionState { get; set; }
 
         [JsonPropertyName("scope")]
-        public string Scope { get; set; }
+        public string? Scope { get; set; }
     }
 
 

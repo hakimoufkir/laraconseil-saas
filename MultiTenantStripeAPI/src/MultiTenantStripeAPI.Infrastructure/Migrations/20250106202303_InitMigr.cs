@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -7,7 +8,7 @@
 namespace MultiTenantStripeAPI.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class iniiitt : Migration
+    public partial class InitMigr : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,12 +17,12 @@ namespace MultiTenantStripeAPI.Infrastructure.Migrations
                 name: "Tenants",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TenantId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SubscriptionStatus = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    TenantName = table.Column<string>(type: "text", nullable: true),
+                    TenantId = table.Column<string>(type: "text", nullable: true),
+                    Email = table.Column<string>(type: "text", nullable: true),
+                    SubscriptionStatus = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -42,8 +43,7 @@ namespace MultiTenantStripeAPI.Infrastructure.Migrations
                 name: "IX_Tenants_TenantId",
                 table: "Tenants",
                 column: "TenantId",
-                unique: true,
-                filter: "[TenantId] IS NOT NULL");
+                unique: true);
         }
 
         /// <inheritdoc />

@@ -15,6 +15,8 @@ builder.Services.AddSingleton<ServiceBusClient>(provider =>
     return new ServiceBusClient(connectionString);
 });
 builder.Services.AddSingleton<ServiceBusListener>();
+builder.Services.AddSingleton<ServiceBusPublisher>();
+
 
 // Add controllers
 builder.Services.AddControllers();

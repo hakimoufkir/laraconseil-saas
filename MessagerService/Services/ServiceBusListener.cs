@@ -1,64 +1,65 @@
 using Azure.Messaging.ServiceBus;
-using MessagerService.Models;
 using Newtonsoft.Json;
+using MessagerService.Models;
 
 namespace MessagerService.Services
 {
     public class ServiceBusListener : IAsyncDisposable
     {
-        private readonly ServiceBusClient _client;
-        private readonly ServiceBusProcessor _processor;
+        private readonly ServiceBusProcessor _notificationsProcessor;
+        private readonly ServiceBusProcessor _subscriptionEventsProcessor;
         private readonly EmailService _emailService;
 
         public ServiceBusListener(ServiceBusClient client, IConfiguration configuration, EmailService emailService)
         {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
+            if (client == null) throw new ArgumentNullException(nameof(client));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
 
-            string topicName = configuration["ServiceBus:TopicName"];
-            string subscriptionName = configuration["ServiceBus:SubscriptionName"];
+            // Notifications topic and subscription
+            _notificationsProcessor = client.CreateProcessor("notifications", "messager-service-sub", new ServiceBusProcessorOptions());
 
-            _processor = _client.CreateProcessor(topicName, subscriptionName, new ServiceBusProcessorOptions());
+            // Subscription-events topic and subscription
+            _subscriptionEventsProcessor = client.CreateProcessor("subscription-events", "messager-service-sub", new ServiceBusProcessorOptions());
         }
 
         public async Task StartAsync()
         {
-            _processor.ProcessMessageAsync += MessageHandler;
-            _processor.ProcessErrorAsync += ErrorHandler;
+            // Notifications topic processor
+            _notificationsProcessor.ProcessMessageAsync += NotificationsMessageHandler;
+            _notificationsProcessor.ProcessErrorAsync += ErrorHandler;
+            await _notificationsProcessor.StartProcessingAsync();
+            Console.WriteLine("Listening to 'notifications' with subscription 'messager-service-sub'...");
 
-            await _processor.StartProcessingAsync();
-            Console.WriteLine("ServiceBusListener started successfully.");
+            // Subscription-events topic processor
+            _subscriptionEventsProcessor.ProcessMessageAsync += SubscriptionEventsMessageHandler;
+            _subscriptionEventsProcessor.ProcessErrorAsync += ErrorHandler;
+            await _subscriptionEventsProcessor.StartProcessingAsync();
+            Console.WriteLine("Listening to 'subscription-events' with subscription 'messager-service-sub'...");
         }
 
-        private async Task MessageHandler(ProcessMessageEventArgs args)
+        private async Task NotificationsMessageHandler(ProcessMessageEventArgs args)
         {
             try
             {
                 string messageBody = args.Message.Body.ToString();
-                Console.WriteLine($"Received message: {messageBody}");
+                Console.WriteLine($"[Notifications] Received message: {messageBody}");
 
                 var notification = JsonConvert.DeserializeObject<NotificationMessage>(messageBody);
-                Console.WriteLine($"Deserialized Notification: {notification}");
-
                 if (notification == null || string.IsNullOrEmpty(notification.Subject) || string.IsNullOrEmpty(notification.RecipientEmail))
                 {
-                    Console.WriteLine("Invalid notification message payload.");
+                    Console.WriteLine("[Notifications] Invalid message payload.");
                     return;
                 }
 
                 // Handle specific notifications based on the subject
                 switch (notification.Subject)
                 {
-                    case "Subscription Activated":
-                        await HandleSubscriptionActivated(notification);
-                        break;
-
                     case "Realm Created":
                         await HandleRealmCreated(notification);
                         break;
 
                     default:
-                        Console.WriteLine($"Unhandled notification subject: {notification.Subject}");
+                        Console.WriteLine($"[Notifications] Unhandled notification subject: {notification.Subject}");
                         break;
                 }
 
@@ -66,31 +67,66 @@ namespace MessagerService.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing message: {ex.Message}");
+                Console.WriteLine($"[Notifications] Error processing message: {ex.Message}");
             }
         }
 
-        private async Task HandleSubscriptionActivated(NotificationMessage notification)
+        private async Task SubscriptionEventsMessageHandler(ProcessMessageEventArgs args)
         {
-            Console.WriteLine($"Processing subscription activation for: {notification.RecipientEmail}");
-            string subject = "Your Subscription Has Been Activated!";
-            string body = $@"
-                <h1>Welcome, {notification.Payload.TenantName}!</h1>
-                <p>{notification.Payload.Message}</p>";
+            try
+            {
+                string messageBody = args.Message.Body.ToString();
+                Console.WriteLine($"[SubscriptionEvents] Received message: {messageBody}");
 
-            await _emailService.SendEmailAsync(notification.RecipientEmail, subject, body);
+                var subscriptionEvent = JsonConvert.DeserializeObject<NotificationMessage>(messageBody);
+                if (subscriptionEvent == null || string.IsNullOrEmpty(subscriptionEvent.Subject) || string.IsNullOrEmpty(subscriptionEvent.RecipientEmail))
+                {
+                    Console.WriteLine("[SubscriptionEvents] Invalid message payload.");
+                    return;
+                }
+
+                // Handle subscription-related events
+                switch (subscriptionEvent.Subject)
+                {
+                    case "Subscription Activated":
+                    case "Subscription Updated":
+                    case "Subscription Canceled":
+                        await HandleSubscriptionUpdatedOrCanceled(subscriptionEvent);
+                        break;
+
+                    default:
+                        Console.WriteLine($"[SubscriptionEvents] Unhandled subscription event subject: {subscriptionEvent.Subject}");
+                        break;
+                }
+
+                await args.CompleteMessageAsync(args.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SubscriptionEvents] Error processing message: {ex.Message}");
+            }
         }
-
         private async Task HandleRealmCreated(NotificationMessage notification)
         {
-            Console.WriteLine($"Processing realm creation for: {notification.RecipientEmail}");
+            Console.WriteLine($"Processing realm creation for: {notification?.RecipientEmail ?? "undefined"}");
             string subject = "Your Account Has Been Created";
             string body = $@"
-                <h1>Welcome to Our Platform!</h1>
-                <p>Your account has been created under the realm: <strong>{notification.Payload.TenantName}</strong>.</p>
-                <p>Details: {notification.Payload.Message}</p>";
+        <h1>Welcome to Our Platform!</h1>
+        <p>Your account has been created under the realm: <strong>{notification?.Payload?.Realm ?? "undefined"}</strong>.</p>
+        <p>Details: {notification?.Payload?.Message ?? "No additional details available."}</p>";
 
-            await _emailService.SendEmailAsync(notification.RecipientEmail, subject, body);
+            await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
+        }
+
+        private async Task HandleSubscriptionUpdatedOrCanceled(NotificationMessage notification)
+        {
+            Console.WriteLine($"Processing subscription update/cancellation for: {notification?.RecipientEmail ?? "undefined"}");
+            string subject = $"Your Subscription Has Been {notification?.Payload?.SubscriptionStatus ?? "undefined"}!";
+            string body = $@"
+        <h1>Hello, {notification?.Payload?.TenantName ?? "User"}!</h1>
+        <p>{notification?.Payload?.Message ?? "No additional details available."}</p>";
+
+            await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
         }
 
         private Task ErrorHandler(ProcessErrorEventArgs args)
@@ -101,8 +137,8 @@ namespace MessagerService.Services
 
         public async ValueTask DisposeAsync()
         {
-            await _processor.CloseAsync();
-            await _client.DisposeAsync();
+            await _notificationsProcessor.CloseAsync();
+            await _subscriptionEventsProcessor.CloseAsync();
         }
     }
 }

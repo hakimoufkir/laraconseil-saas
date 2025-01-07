@@ -2,6 +2,6 @@
 {
     public interface IServiceBusPublisher
     {
-        Task PublishMessageAsync(string topicName, string message);
+        Task PublishMessageAsync(string topicName, object message);
     }
 }

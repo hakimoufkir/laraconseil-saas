@@ -9,18 +9,32 @@ public class ServiceBusPublisher
 
     public ServiceBusPublisher(ServiceBusClient serviceBusClient)
     {
-        _serviceBusClient = serviceBusClient;
+        _serviceBusClient = serviceBusClient ?? throw new ArgumentNullException(nameof(serviceBusClient));
     }
 
-    public async Task PublishMessageAsync(string topicName, object message)
+    public async Task PublishNotificationAsync(string subject, string recipientEmail, string message)
     {
-        var sender = _serviceBusClient.CreateSender(topicName);
+        // Construct the notification message
+        var notification = new
+        {
+            Subject = subject,
+            RecipientEmail = recipientEmail,
+            Message = message
+        };
+
+        // Publish to the notifications topic
+        var sender = _serviceBusClient.CreateSender("notifications");
 
         try
         {
-            var serviceBusMessage = new ServiceBusMessage(JsonSerializer.Serialize(message));
+            var serviceBusMessage = new ServiceBusMessage(JsonSerializer.Serialize(notification));
             await sender.SendMessageAsync(serviceBusMessage);
-            Console.WriteLine($"Message published to topic '{topicName}': {message}");
+            Console.WriteLine($"[Notifications] Message published: {notification}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Notifications] Error publishing message: {ex.Message}");
+            throw;
         }
         finally
         {

@@ -15,15 +15,15 @@ namespace MultiTenantStripeAPI.Application.Services
             _client = new ServiceBusClient(connectionString);
         }
 
-        public async Task PublishMessageAsync(string topicName, string message)
+        public async Task PublishMessageAsync(string topicName, object message)
         {
             var sender = _client.CreateSender(topicName);
 
             try
             {
-                var serviceBusMessage = new ServiceBusMessage(message);
+                string messageBody = message is string ? message.ToString() : System.Text.Json.JsonSerializer.Serialize(message);
+                var serviceBusMessage = new ServiceBusMessage(messageBody);
                 await sender.SendMessageAsync(serviceBusMessage);
-                Console.WriteLine($"Message published to topic '{topicName}': {message}");
             }
             finally
             {

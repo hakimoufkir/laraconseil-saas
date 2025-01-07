@@ -20,8 +20,6 @@ namespace MultiTenantStripeAPI.Application
             ?? throw new InvalidOperationException("Azure Service Bus connection string is not set in the configuration.");
             services.AddTransient<IServiceBusPublisher>(_ => new ServiceBusPublisher(serviceBusConnectionString));
 
-            // Register HttpClient for KeycloakService
-            services.AddHttpClient<IKeycloakService, KeycloakService>();
 
             // Register MediatR for CQRS
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

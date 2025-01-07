@@ -7,10 +7,12 @@ namespace KeycloakServiceAPI.Services;
 public class KeycloakService
 {
     private readonly HttpClient _httpClient;
+    private readonly ServiceBusPublisher _serviceBusPublisher;
 
-    public KeycloakService(HttpClient httpClient)
+    public KeycloakService(HttpClient httpClient, ServiceBusPublisher serviceBusPublisher)
     {
-        _httpClient = httpClient;
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _serviceBusPublisher = serviceBusPublisher ?? throw new ArgumentNullException(nameof(serviceBusPublisher));
     }
 
     public async Task CreateRealmAndUserAsync(string realmName, string tenantEmail)
@@ -27,6 +29,13 @@ public class KeycloakService
 
             // Step 3: Create User
             await CreateUserAsync(realmName, tenantEmail, adminToken);
+
+            // Publish success notification
+            await _serviceBusPublisher.PublishNotificationAsync(
+                "Realm Created",
+                tenantEmail,
+                $"Your realm '{realmName}' has been successfully created."
+            );
         }
         catch (Exception ex)
         {
@@ -41,11 +50,11 @@ public class KeycloakService
         {
             new KeyValuePair<string, string>("client_id", "admin-cli"),
             new KeyValuePair<string, string>("username", "admin"),
-            new KeyValuePair<string, string>("password", "admin"),
+            new KeyValuePair<string, string>("password", "StrongPassword@123"),
             new KeyValuePair<string, string>("grant_type", "password"),
         });
 
-        var response = await _httpClient.PostAsync("http://keycloak:8080/realms/master/protocol/openid-connect/token", form);
+        var response = await _httpClient.PostAsync("https://keycloaklaraconseil.azurewebsites.net/realms/master/protocol/openid-connect/token", form);
         response.EnsureSuccessStatusCode();
 
         var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -58,7 +67,7 @@ public class KeycloakService
     {
         var realm = new { id = realmName, realm = realmName, enabled = true };
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "http://keycloak:8080/admin/realms")
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://keycloaklaraconseil.azurewebsites.net/admin/realms")
         {
             Headers = { Authorization = new AuthenticationHeaderValue("Bearer", adminToken) },
             Content = new StringContent(JsonSerializer.Serialize(realm), System.Text.Encoding.UTF8, "application/json"),
@@ -80,7 +89,7 @@ public class KeycloakService
             credentials = new[] { new { type = "password", value = "SecurePassword123", temporary = false } }
         };
 
-        var request = new HttpRequestMessage(HttpMethod.Post, $"http://keycloak:8080/admin/realms/{realmName}/users")
+        var request = new HttpRequestMessage(HttpMethod.Post, $"https://keycloaklaraconseil.azurewebsites.net/admin/realms/{realmName}/users")
         {
             Headers = { Authorization = new AuthenticationHeaderValue("Bearer", adminToken) },
             Content = new StringContent(JsonSerializer.Serialize(user), System.Text.Encoding.UTF8, "application/json"),
