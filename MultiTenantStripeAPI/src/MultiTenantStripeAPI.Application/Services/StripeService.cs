@@ -70,26 +70,35 @@ namespace MultiTenantStripeAPI.Application.Services
                 return;
             }
 
-            var customerEmail = session.CustomerDetails?.Email;
-            if (string.IsNullOrWhiteSpace(customerEmail))
+            var customerDetails = session.CustomerDetails;
+
+            // Extract tenant details
+            var tenantName = customerDetails?.Name ?? "Unknown Tenant";
+            var tenantEmail = customerDetails?.Email;
+
+            if (string.IsNullOrWhiteSpace(tenantEmail))
             {
                 Console.WriteLine("Customer email is missing from the Stripe session.");
                 return;
             }
 
-            var tenant = _tenantService.GetTenantByEmail(customerEmail) ??
-                         _tenantService.CreateTenant(session.CustomerDetails?.Name ?? "Unknown Tenant", customerEmail);
+            // Create or retrieve tenant
+            var tenant = _tenantService.GetTenantByEmail(tenantEmail) ??
+                         _tenantService.CreateTenant(tenantName, tenantEmail);
 
             _tenantService.UpdateTenantStatus(tenant, "Active");
             Console.WriteLine($"Tenant '{tenant.TenantName}' subscription status updated to Active.");
 
+            // Publish subscription event
             await PublishSubscriptionEvent("Subscription Activated", tenant.TenantName, tenant.Email, "Active");
 
             try
             {
+                // Trigger Keycloak realm and user creation
                 await _keycloakService.CreateRealmAndUserAsync(tenant.TenantName, tenant.Email);
                 Console.WriteLine($"Keycloak realm and user created successfully for tenant '{tenant.TenantName}'.");
-                // MAWDO3 LINI9ACH WACH KHSNI NSIFTHA HENA WLA HTAL KEYCLOAK ICREE REALM
+
+                // Publish notification for realm creation
                 await PublishNotification("Realm Created", tenant.Email, tenant.TenantName, "Your realm has been successfully created.");
             }
             catch (Exception ex)
@@ -170,11 +179,9 @@ namespace MultiTenantStripeAPI.Application.Services
                     RecipientEmail = recipientEmail,
                     Payload = new NotificationPayload
                     {
-                        Subject = subject, // Populate Payload.Subject
-                        RecipientEmail = recipientEmail, // Populate Payload.RecipientEmail
-                        TenantName = tenantName,
-                        Realm = tenantName, // Assuming Realm and TenantName are the same
-                        Message = message
+                        TenantName = tenantName ?? "Unknown Tenant",
+                        Realm = tenantName ?? "Unknown Realm", // Assuming Realm is same as TenantName
+                        Message = message ?? "No additional details available."
                     }
                 };
 
@@ -197,11 +204,9 @@ namespace MultiTenantStripeAPI.Application.Services
                     RecipientEmail = email,
                     Payload = new NotificationPayload
                     {
-                        Subject = subject,
-                        RecipientEmail = email,
-                        TenantName = tenantName,
-                        SubscriptionStatus = subscriptionStatus,
-                        Message = $"Your subscription status is now {subscriptionStatus}."
+                        TenantName = tenantName ?? "Unknown Tenant",
+                        SubscriptionStatus = subscriptionStatus ?? "Unknown Status",
+                        Message = $"Your subscription status is now {subscriptionStatus ?? "Unknown"}."
                     }
                 };
 

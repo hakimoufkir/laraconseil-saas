@@ -2,96 +2,174 @@ using Stripe;
 using MultiTenantStripeAPI.Api.Middleware;
 using MultiTenantStripeAPI.Application;
 using MultiTenantStripeAPI.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using MultiTenantStripeAPI.Api.Extensions;
 using MultiTenantStripeAPI.Domain.Entities;
-using MultiTenantStripeAPI.Infrastructure.Persistence.Context;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Define required configuration keys for MultiTenant Service
+// Configuration validation
 var requiredKeysMultiTenant = new Dictionary<string, string>
 {
-    { "ConnectionStrings:AzureServiceBus", "The Azure Service Bus connection string is missing for MultiTenant Service." },
-    { "ConnectionStrings:DefaultSQLConnection", "The SQL database connection string is missing for MultiTenant Service." },
-    { "Stripe:SecretKey", "The Stripe secret key is missing for MultiTenant Service." },
-    { "Stripe:PublishableKey", "The Stripe publishable key is missing for MultiTenant Service." },
-    { "Stripe:WebhookSecret", "The Stripe webhook secret is missing for MultiTenant Service." },
-    { "SERVICE_PORT", "The MultiTenant Service port is missing." }
+    { "ConnectionStrings:AzureServiceBus", "Azure Service Bus connection string is missing." },
+    { "ConnectionStrings:DefaultSQLConnection", "SQL connection string is missing." },
+    { "Stripe:SecretKey", "Stripe secret key is missing." },
+    { "Stripe:PublishableKey", "Stripe publishable key is missing." },
+    { "Stripe:WebhookSecret", "Stripe webhook secret is missing." },
+    { "SERVICE_PORT", "Service port is missing." }
 };
 
-
-// Verify all required keys for MultiTenant Service
+// Validate configuration
 foreach (var key in requiredKeysMultiTenant.Keys)
 {
     var value = builder.Configuration[key];
     if (string.IsNullOrEmpty(value))
     {
+        Console.WriteLine($"[ERROR] Missing configuration: {key}");
         throw new ArgumentNullException(key, requiredKeysMultiTenant[key]);
     }
 }
 
-// Explicitly configure Kestrel to listen on the assigned port
-var port = builder.Configuration["SERVICE_PORT"] ?? "5006";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+Console.WriteLine("[INFO] Configuration validated successfully.");
 
-// Add services to the container
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGenWithAuth(builder.Configuration);
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = 1024; // Cache size limit
+    options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+});
 
-// Configure Stripe
+// Stripe configuration
 builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+Console.WriteLine("[INFO] Stripe API Key configured.");
 
-var stripeSecretKey = builder.Configuration["Stripe:SecretKey"]
-    ?? throw new InvalidOperationException("Stripe secret key is not set in the configuration.");
-var stripeWebhookSecret = builder.Configuration["Stripe:WebhookSecret"]
-    ?? throw new InvalidOperationException("Stripe webhook secret is not set in the configuration.");
-
-StripeConfiguration.ApiKey = stripeSecretKey;
-
-
-
-// Add Application and Infrastructure services
+// Add application and infrastructure services
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
+Console.WriteLine("[INFO] Application and infrastructure services added.");
 
-// Configure CORS
+// Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = true;
+        options.Audience = builder.Configuration["Authentication:Audience"];
+        options.MetadataAddress = builder.Configuration["Authentication:MetadataAddress"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = builder.Configuration["Authentication:ValidIssuer"]
+        };
+    });
+Console.WriteLine("[INFO] Authentication configured.");
+
+// Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("GrowerPolicy", policy =>
+    {
+        policy.RequireAssertion(context =>
+        {
+            Console.WriteLine("[INFO] Evaluating GrowerPolicy...");
+            var roleClaim = context.User.Claims.FirstOrDefault(c => c.Type == "resource_access");
+
+            Console.WriteLine($"[DEBUG] Full JWT Claims: {string.Join(", ", context.User.Claims.Select(c => $"{c.Type}: {c.Value}"))}");
+
+
+            if (roleClaim == null)
+            {
+                Console.WriteLine("[WARNING] Role claim not found in user token.");
+                return false;
+            }
+
+            var resourceAccess = System.Text.Json.JsonDocument.Parse(roleClaim.Value);
+            if (resourceAccess.RootElement.TryGetProperty("LaraConseil", out var clientRoles) &&
+                clientRoles.TryGetProperty("roles", out var roles))
+            {
+                var hasRole = roles.EnumerateArray().Any(r => r.GetString() == "Grower");
+                Console.WriteLine($"[INFO] Grower role check: {hasRole}");
+                return hasRole;
+            }
+
+            Console.WriteLine("[WARNING] Grower role not found in resource_access.");
+            return false;
+        });
+    });
+
+    options.AddPolicy("StationAdminPolicy", policy =>
+    {
+        policy.RequireAssertion(context =>
+        {
+            Console.WriteLine("[INFO] Evaluating StationAdminPolicy...");
+            var roleClaim = context.User.Claims.FirstOrDefault(c => c.Type == "resource_access");
+
+            if (roleClaim == null)
+            {
+                Console.WriteLine("[WARNING] Role claim not found in user token.");
+                return false;
+            }
+
+            var resourceAccess = System.Text.Json.JsonDocument.Parse(roleClaim.Value);
+            if (resourceAccess.RootElement.TryGetProperty("LaraConseil", out var clientRoles) &&
+                clientRoles.TryGetProperty("roles", out var roles))
+            {
+                var hasRole = roles.EnumerateArray().Any(r => r.GetString() == "StationAdmin");
+                Console.WriteLine($"[INFO] StationAdmin role check: {hasRole}");
+                return hasRole;
+            }
+
+            Console.WriteLine("[WARNING] StationAdmin role not found in resource_access.");
+            return false;
+        });
+    });
+});
+Console.WriteLine("[INFO] Authorization policies configured.");
+
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowOrigin", policy =>
-        policy
-            .WithOrigins(
-                "http://localhost:4200",
-                "https://subscription-app.gentlegrass-3889baac.westeurope.azurecontainerapps.io")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+        policy.WithOrigins("http://localhost:4200", "https://subscription-app.azurecontainerapps.io")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
+Console.WriteLine("[INFO] CORS policy configured.");
 
 var app = builder.Build();
 
-// Apply migrations
-// using (var scope = app.Services.CreateScope())
-// {
-//     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//     dbContext.Database.Migrate();
-// }
+Console.WriteLine("[INFO] Application has started.");
 
+// Test claims endpoint
+app.MapGet("/users/me", (ClaimsPrincipal claimsPrincipal) =>
+{
+    Console.WriteLine("[INFO] /users/me endpoint accessed.");
+    return claimsPrincipal.Claims.ToDictionary(c => c.Type, c => c.Value);
+}).RequireAuthorization();
 
-// Configure the HTTP request pipeline
+// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    Console.WriteLine("[INFO] Swagger UI enabled.");
 }
 
 app.UseCors("AllowOrigin");
 app.UseHttpsRedirection();
-
-// Use custom middleware
 app.UseMiddleware<TenantMiddleware>();
+Console.WriteLine("[INFO] TenantMiddleware added to pipeline.");
+
+app.UseAuthentication();
+Console.WriteLine("[INFO] Authentication middleware added to pipeline.");
 
 app.UseAuthorization();
+Console.WriteLine("[INFO] Authorization middleware added to pipeline.");
 
 app.MapControllers();
 

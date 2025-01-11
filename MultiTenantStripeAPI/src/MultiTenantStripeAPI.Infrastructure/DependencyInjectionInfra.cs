@@ -25,8 +25,13 @@ namespace MultiTenantStripeAPI.Infrastructure
             // Register Generic Repository and Unit of Work
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IUnitOfWork, UnitOfWork.UnitOfWork>();
-            services.AddTransient<IUnitOfWork, UnitOfWork.UnitOfWork>();
             services.AddTransient<ITenantRepository, TenantRepository>();
+            services.AddTransient<IRolePermissionRepository, RolePermissionRepository>();
+            services.AddTransient<IUserRoleRepository, UserRoleRepository>();
+            services.AddTransient<IRoleRepository, RoleRepository>();
+            services.AddTransient<IUserRepository, UserRepository>();
+            services.AddHttpContextAccessor();
+
 
             return services;
         }

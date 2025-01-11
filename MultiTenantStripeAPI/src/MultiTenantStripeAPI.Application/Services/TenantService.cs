@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using Npgsql;
 using MultiTenantStripeAPI.Application.IServices;
 using MultiTenantStripeAPI.Domain.Entities;
 
@@ -40,11 +40,26 @@ namespace MultiTenantStripeAPI.Application.Services
                 SubscriptionStatus = "Pending"
             };
 
+            // Dynamically create a database for the tenant
+            var databaseName = $"Tenant_{tenant.TenantId}";
+            var masterConnection = "Host=my-lc-postgres-server.postgres.database.azure.com;Database=postgres;Username=adminLaraconseil;Password=StrongPassword@123;";
+
+            using (var connection = new NpgsqlConnection(masterConnection))
+            {
+                connection.Open();
+                var createDbCommand = connection.CreateCommand();
+                createDbCommand.CommandText = $"CREATE DATABASE \"{databaseName}\"";
+                createDbCommand.ExecuteNonQuery();
+            }
+
+            // Assign the database connection string to the tenant
+            tenant.DatabaseConnectionString = $"Host=my-lc-postgres-server.postgres.database.azure.com;Database={databaseName};Username=adminLaraconseil;Password=StrongPassword@123;";
+
             // Save the tenant to the database
             _unitOfWork.TenantRepository.CreateAsync(tenant);
             _unitOfWork.Commit();
 
-            Console.WriteLine($"Tenant created successfully: {tenant.TenantId}");
+            Console.WriteLine($"Tenant created successfully with database: {tenant.TenantId}");
             return tenant;
         }
 
@@ -97,5 +112,7 @@ namespace MultiTenantStripeAPI.Application.Services
             _unitOfWork.TenantRepository.RemoveAsync(tenant);
             _unitOfWork.Commit();
         }
+
+        
     }
 }

@@ -112,7 +112,7 @@ namespace MessagerService.Services
             string subject = "Your Account Has Been Created";
             string body = $@"
         <h1>Welcome to Our Platform!</h1>
-        <p>Your account has been created under the realm: <strong>{notification?.Payload?.Realm ?? "undefined"}</strong>.</p>
+        <p>Your account has been created under the realm: <strong>{notification?.Payload?.Realm ?? "Unknown Realm"}</strong>.</p>
         <p>Details: {notification?.Payload?.Message ?? "No additional details available."}</p>";
 
             await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
@@ -121,7 +121,7 @@ namespace MessagerService.Services
         private async Task HandleSubscriptionUpdatedOrCanceled(NotificationMessage notification)
         {
             Console.WriteLine($"Processing subscription update/cancellation for: {notification?.RecipientEmail ?? "undefined"}");
-            string subject = $"Your Subscription Has Been {notification?.Payload?.SubscriptionStatus ?? "undefined"}!";
+            string subject = $"Your Subscription Has Been {notification?.Payload?.SubscriptionStatus ?? "Unknown"}!";
             string body = $@"
         <h1>Hello, {notification?.Payload?.TenantName ?? "User"}!</h1>
         <p>{notification?.Payload?.Message ?? "No additional details available."}</p>";

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MultiTenantStripeAPI.Application.Features.Payment.Commands;
 using MultiTenantStripeAPI.Application.Features.Payment.Commands.CreateCheckoutSession;
+using MultiTenantStripeAPI.Application.Features.Payment.Commands.ProcessStripeEvent;
 using MultiTenantStripeAPI.Application.Features.Payment.Queries;
 using MultiTenantStripeAPI.Domain.Entities;
 using Stripe;

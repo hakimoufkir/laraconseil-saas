@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Stripe;
 
-namespace MultiTenantStripeAPI.Application.Features.Payment.Commands
+namespace MultiTenantStripeAPI.Application.Features.Payment.Commands.ProcessStripeEvent
 {
     public class ProcessStripeEventCommand : IRequest<Unit>
     {

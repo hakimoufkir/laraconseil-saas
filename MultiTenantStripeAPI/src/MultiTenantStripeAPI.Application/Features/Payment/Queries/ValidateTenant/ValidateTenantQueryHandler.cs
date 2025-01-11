@@ -3,7 +3,7 @@ using MultiTenantStripeAPI.Application.IServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiTenantStripeAPI.Application.Features.Payment.Queries
+namespace MultiTenantStripeAPI.Application.Features.Payment.Queries.ValidateTenant
 {
     public class ValidateTenantQueryHandler : IRequestHandler<ValidateTenantQuery, bool>
     {

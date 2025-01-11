@@ -1,10 +1,9 @@
 ﻿using MediatR;
-using MultiTenantStripeAPI.Application.Features.Payment.Commands.CreateCheckoutSession;
 using MultiTenantStripeAPI.Application.IServices;
 using MultiTenantStripeAPI.Domain.Entities;
 
 
-namespace MultiTenantStripeAPI.Application.Features.Payment.Commands
+namespace MultiTenantStripeAPI.Application.Features.Payment.Commands.CreateCheckoutSession
 {
     public class CreateCheckoutSessionCommandHandler : IRequestHandler<CreateCheckoutSessionCommand, string>
     {
@@ -21,7 +20,7 @@ namespace MultiTenantStripeAPI.Application.Features.Payment.Commands
 
         public async Task<string> Handle(CreateCheckoutSessionCommand request, CancellationToken cancellationToken)
         {
-            Tenant tenant;
+            MultiTenantStripeAPI.Domain.Entities.Tenant tenant;
 
             try
             {

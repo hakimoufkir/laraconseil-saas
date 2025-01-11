@@ -17,8 +17,6 @@ public class KeycloakService
 
     public async Task CreateRealmAndUserAsync(string realmName, string tenantEmail)
     {
-        Console.WriteLine($"Creating realm '{realmName}' and user '{tenantEmail}' in Keycloak...");
-
         try
         {
             // Step 1: Retrieve Admin Token
@@ -34,7 +32,7 @@ public class KeycloakService
             await _serviceBusPublisher.PublishNotificationAsync(
                 "Realm Created",
                 tenantEmail,
-                $"Your realm '{realmName}' has been successfully created."
+                $"Your realm '{realmName ?? "Unknown Realm"}' has been successfully created."
             );
         }
         catch (Exception ex)

@@ -14,6 +14,8 @@ namespace MultiTenantStripeAPI.Application
             services.AddTransient<IStripeService, StripeService>();
             services.AddTransient<IKeycloakService, KeycloakService>();
             services.AddTransient<ITenantService, TenantService>();
+            services.AddTransient<IRoleService, RoleService>();
+            services.AddTransient<IUserService, UserService>();
 
             // Register ServiceBusPublisher
             var serviceBusConnectionString = configuration["ConnectionStrings:AzureServiceBus"]
@@ -26,6 +28,8 @@ namespace MultiTenantStripeAPI.Application
 
             // Register AutoMapper
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            
 
             return services;
         }

@@ -21,7 +21,170 @@ namespace MultiTenantStripeAPI.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "View own farms and plots",
+                            Name = "ViewOwnData"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Submit treatments",
+                            Name = "SubmitTreatment"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Respond to audits",
+                            Name = "RespondToAudit"
+                        });
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Grower role",
+                            Name = "Grower",
+                            TenantId = "tenant1-id"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Station Admin role",
+                            Name = "StationAdmin",
+                            TenantId = "tenant1-id"
+                        });
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("RolePermissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            PermissionId = 1,
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            PermissionId = 2,
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            PermissionId = 3,
+                            RoleId = 1
+                        });
+                });
+
             modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.Tenant", b =>
+                {
+                    b.Property<string>("TenantId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DatabaseConnectionString")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubscriptionStatus")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TenantName")
+                        .HasColumnType("text");
+
+                    b.HasKey("TenantId");
+
+                    b.ToTable("Tenants");
+
+                    b.HasData(
+                        new
+                        {
+                            TenantId = "tenant1-id",
+                            DatabaseConnectionString = "ConnectionStringForTenant1",
+                            Email = "tenant1@example.com",
+                            SubscriptionStatus = "Active",
+                            TenantName = "Tenant One"
+                        },
+                        new
+                        {
+                            TenantId = "tenant2-id",
+                            DatabaseConnectionString = "ConnectionStringForTenant2",
+                            Email = "tenant2@example.com",
+                            SubscriptionStatus = "Pending",
+                            TenantName = "Tenant Two"
+                        });
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -30,49 +193,147 @@ namespace MultiTenantStripeAPI.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SubscriptionStatus")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("TenantId")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("TenantName")
+                    b.Property<string>("UserName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId")
-                        .IsUnique();
+                    b.HasIndex("TenantId");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Users");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            Email = "tenant1@example.com",
-                            SubscriptionStatus = "Active",
+                            Email = "john.doe@example.com",
                             TenantId = "tenant1-id",
-                            TenantName = "Tenant One"
+                            UserName = "John Doe"
                         },
                         new
                         {
                             Id = 2,
-                            Email = "tenant2@example.com",
-                            SubscriptionStatus = "Pending",
-                            TenantId = "tenant2-id",
-                            TenantName = "Tenant Two"
+                            Email = "jane.smith@example.com",
+                            TenantId = "tenant1-id",
+                            UserName = "Jane Smith"
                         },
                         new
                         {
                             Id = 3,
-                            Email = "tenant3@example.com",
-                            SubscriptionStatus = "Expired",
-                            TenantId = "tenant3-id",
-                            TenantName = "Tenant Three"
+                            Email = "emily.davis@example.com",
+                            TenantId = "tenant2-id",
+                            UserName = "Emily Davis"
                         });
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            RoleId = 1,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            RoleId = 2,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            RoleId = 1,
+                            UserId = 3
+                        });
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("MultiTenantStripeAPI.Domain.Entities.Permission", "Permission")
+                        .WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MultiTenantStripeAPI.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.User", b =>
+                {
+                    b.HasOne("MultiTenantStripeAPI.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("MultiTenantStripeAPI.Domain.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MultiTenantStripeAPI.Domain.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("MultiTenantStripeAPI.Domain.Entities.User", b =>
+                {
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

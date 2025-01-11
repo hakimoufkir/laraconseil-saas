@@ -10,7 +10,12 @@
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" />
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
     <PackageReference Include="Stripe.net" Version="47.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Users\Queries\" />
   </ItemGroup>
 
   <PropertyGroup>

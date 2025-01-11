@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiTenantStripeAPI.Application.Features.Payment.Commands
+namespace MultiTenantStripeAPI.Application.Features.Payment.Commands.ProcessStripeEvent
 {
     public class ProcessStripeEventCommandHandler : IRequestHandler<ProcessStripeEventCommand, Unit>
     {
