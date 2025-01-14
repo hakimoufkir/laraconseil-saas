@@ -23,7 +23,7 @@ namespace MultiTenantStripeAPI.Api.Middleware
             "/api/Cache/",
             "/api/TestAuth/anonymous",
             "/api/TestAuth/grower",
-            "/api/TestAuth/station-admin",
+            "/api/TestAuth/station",
             "/api/TestAuth/claims"
         };
 

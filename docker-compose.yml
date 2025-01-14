@@ -27,8 +27,6 @@ services:
       Stripe__PublishableKey: ${STRIPE_PUBLISHABLE_KEY}
       Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET}
       SERVICE_PORT: ${MULTITENANT_API_PORT}
-    depends_on:
-      - keycloak
     networks:
       - our-network
 
@@ -48,13 +46,13 @@ services:
       - our-network
 
   # Angular Frontend
-  subscription-app:
+  webapp:
     build:
-      context: ./subscription-app
+      context: ./webapp
       dockerfile: Dockerfile
       args:
         CONFIGURATION: ${ANGULAR_BUILD_CONFIGURATION}
-    container_name: subscription-app
+    container_name: webapp
     ports:
       - "${SUBSCRIPTION_APP_PORT}:80"
     networks:
@@ -70,8 +68,6 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings__AzureServiceBus: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
       SERVICE_PORT: ${KEYCLOAK_SERVICE_API_PORT}
-    depends_on:
-      - keycloak
     networks:
       - our-network
         

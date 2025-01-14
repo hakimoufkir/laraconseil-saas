@@ -70,8 +70,8 @@ update_container_app "messager-service" "$MESSAGER_SERVICE_IMAGE" \
     "$(wrap_env_var "AzureCommunicationServices__SenderEmail" "$AZURE_COMMUNICATION_SENDER_EMAIL")"
 
 # Update Subscription App (Angular Frontend)
-update_container_app "subscription-app" "$SUBSCRIPTION_APP_IMAGE" \
-    "$(wrap_env_var "PORT" "$SUBSCRIPTION_APP_PORT")" \
+update_container_app "webapp" "$WEBAPP_IMAGE" \
+    "$(wrap_env_var "PORT" "$WEBAPP_PORT")" \
     "$(wrap_env_var "ANGULAR_BUILD_CONFIGURATION" "$ANGULAR_BUILD_CONFIGURATION")"
 
 # Update Keycloak Service API

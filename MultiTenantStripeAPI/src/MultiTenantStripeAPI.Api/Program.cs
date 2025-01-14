@@ -71,6 +71,7 @@ Console.WriteLine("[INFO] Authentication configured.");
 // Authorization policies
 builder.Services.AddAuthorization(options =>
 {
+    // GrowerPolicy
     options.AddPolicy("GrowerPolicy", policy =>
     {
         policy.RequireAssertion(context =>
@@ -101,11 +102,13 @@ builder.Services.AddAuthorization(options =>
         });
     });
 
-    options.AddPolicy("StationAdminPolicy", policy =>
+
+    // StationPolicy
+    options.AddPolicy("StationPolicy", policy =>
     {
         policy.RequireAssertion(context =>
         {
-            Console.WriteLine("[INFO] Evaluating StationAdminPolicy...");
+            Console.WriteLine("[INFO] Evaluating StationPolicy...");
             var roleClaim = context.User.Claims.FirstOrDefault(c => c.Type == "resource_access");
 
             if (roleClaim == null)
@@ -114,19 +117,38 @@ builder.Services.AddAuthorization(options =>
                 return false;
             }
 
-            var resourceAccess = System.Text.Json.JsonDocument.Parse(roleClaim.Value);
-            if (resourceAccess.RootElement.TryGetProperty("LaraConseil", out var clientRoles) &&
-                clientRoles.TryGetProperty("roles", out var roles))
+            Console.WriteLine($"[DEBUG] Role Claim Value: {roleClaim.Value}");
+
+            try
             {
-                var hasRole = roles.EnumerateArray().Any(r => r.GetString() == "StationAdmin");
-                Console.WriteLine($"[INFO] StationAdmin role check: {hasRole}");
+                var resourceAccess = System.Text.Json.JsonDocument.Parse(roleClaim.Value);
+
+                if (!resourceAccess.RootElement.TryGetProperty("LaraConseil", out var clientRoles))
+                {
+                    Console.WriteLine("[WARNING] LaraConseil property not found in resource_access.");
+                    return false;
+                }
+
+                if (!clientRoles.TryGetProperty("roles", out var roles))
+                {
+                    Console.WriteLine("[WARNING] Roles property not found in LaraConseil.");
+                    return false;
+                }
+
+                var hasRole = roles.EnumerateArray().Any(r => r.GetString() == "Station");
+                Console.WriteLine($"[INFO] Station role check: {hasRole}");
                 return hasRole;
             }
-
-            Console.WriteLine("[WARNING] StationAdmin role not found in resource_access.");
-            return false;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Exception during StationPolicy evaluation: {ex.Message}");
+                return false;
+            }
         });
     });
+
+
+
 });
 Console.WriteLine("[INFO] Authorization policies configured.");
 
@@ -145,12 +167,6 @@ var app = builder.Build();
 
 Console.WriteLine("[INFO] Application has started.");
 
-// Test claims endpoint
-app.MapGet("/users/me", (ClaimsPrincipal claimsPrincipal) =>
-{
-    Console.WriteLine("[INFO] /users/me endpoint accessed.");
-    return claimsPrincipal.Claims.ToDictionary(c => c.Type, c => c.Value);
-}).RequireAuthorization();
 
 // Configure pipeline
 if (app.Environment.IsDevelopment())

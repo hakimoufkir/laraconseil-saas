@@ -13,7 +13,7 @@ declare -A services=(
   ["apigateway"]="../ApiGateway"
   ["multitenant-api"]="../MultiTenantStripeAPI"
   ["messager-service"]="../MessagerService"
-  ["subscription-app"]="../subscription-app"
+  ["webapp"]="../webapp"
 )
 
 # Build, tag, and push each service

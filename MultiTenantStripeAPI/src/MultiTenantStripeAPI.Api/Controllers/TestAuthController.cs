@@ -24,20 +24,26 @@ namespace MultiTenantStripeAPI.Api.Controllers
             return Ok("This is a Grower-specific endpoint. Access granted.");
         }
 
-        // StationAdmin-specific endpoint
-        [Authorize(Policy = "StationAdminPolicy")]
-        [HttpGet("station-admin")]
-        public IActionResult StationAdminEndpoint()
+        // Station-specific endpoint
+        [Authorize(Policy = "StationPolicy")]
+        [HttpGet("station")]
+        public IActionResult GetStationData()
         {
-            return Ok("This is a StationAdmin-specific endpoint. Access granted.");
+            return Ok("Station data accessed.");
         }
 
+
+        // Get current user's claims
         [Authorize]
         [HttpGet("claims")]
-        public IActionResult GetClaims(ClaimsPrincipal claimsPrincipal)
+        public IActionResult GetClaims()
         {
-            var claims = claimsPrincipal.Claims.ToDictionary(c => c.Type, c => c.Value);
+            var claims = HttpContext.User.Claims
+                .GroupBy(c => c.Type)
+                .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(c => c.Value)));
+
             return Ok(claims);
         }
+
     }
 }
