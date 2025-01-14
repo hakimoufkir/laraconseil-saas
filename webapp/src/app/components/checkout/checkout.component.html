@@ -1,0 +1,47 @@
+<div class="flex items-center justify-center min-h-screen ">
+  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Subscribe to LaraConseil</h1>
+
+    <form (ngSubmit)="createCheckoutSession()" class="space-y-4">
+      <!-- Tenant Name Field -->
+      <div>
+        <label for="tenantName" class="block text-sm font-medium text-gray-700 mb-1">Tenant Name</label>
+        <input
+          id="tenantName"
+          type="text"
+          [(ngModel)]="tenantName"
+          name="tenantName"
+          required
+          class="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
+      <!-- Email Field -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          class="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        [disabled]="isLoading"
+        class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        {{ isLoading ? 'Loading...' : 'Subscribe' }}
+      </button>
+    </form>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="mt-4 text-red-600 text-sm font-medium text-center">
+      {{ errorMessage }}
+    </div>
+  </div>
+</div>
