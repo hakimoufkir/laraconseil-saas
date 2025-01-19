@@ -30,14 +30,23 @@ export class AuthGuard extends KeycloakAuthGuard {
 
     // Get the roles required from the route.
     const requiredRoles = route.data['roles'];
-    // console.log("requiredRoles = ", requiredRoles);
+    const roleMode = route.data['roleMode'] || 'any'; // Default to 'any' if not specified
 
     // Allow the user to proceed if no additional roles are required to access the route.
     if (!Array.isArray(requiredRoles) || requiredRoles.length === 0) {
       return true;
     }
 
-    // Allow the user to proceed if all the required roles are present.
-    return requiredRoles.every((role) => this.roles.includes(role));
+    // Allow the user to proceed based on the role mode
+    if (roleMode === 'all') {
+      // Check if the user has all the required roles
+      return requiredRoles.every((role) => this.roles.includes(role));
+    } else if (roleMode === 'any') {
+      // Check if the user has at least one of the required roles
+      return requiredRoles.some((role) => this.roles.includes(role));
+    }
+
+    // If roleMode is unknown or not specified, deny access
+    return false;
   }
 }

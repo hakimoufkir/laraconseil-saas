@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using MultiTenantStripeAPI.Application.IRepositories;
 using MultiTenantStripeAPI.Infrastructure.Repositories;
 using MultiTenantStripeAPI.Infrastructure.UnitOfWork;
+using Microsoft.Extensions.Logging;
 
 namespace MultiTenantStripeAPI.Infrastructure
 {
@@ -20,7 +21,7 @@ namespace MultiTenantStripeAPI.Infrastructure
                 options.UseNpgsql(
                     configuration.GetConnectionString("DefaultSQLConnection"),
                     sqlOptions => sqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null)
-                ));
+                ).LogTo(Console.WriteLine, LogLevel.Information));
 
             // Register Generic Repository and Unit of Work
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));

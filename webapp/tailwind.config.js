@@ -4,7 +4,11 @@ module.exports = {
     './src/**/*.{html,ts}' // Include all HTML and TypeScript files in the src folder
   ],
   theme: {
-    extend: {},
+    extend: {
+      backgroundImage: {
+        'custom-pattern': "url('/assets/images/underDev.png')",
+      },
+    },
   },
   plugins: [
     require('daisyui'),

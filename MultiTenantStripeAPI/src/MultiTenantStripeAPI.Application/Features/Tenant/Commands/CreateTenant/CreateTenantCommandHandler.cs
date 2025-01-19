@@ -19,7 +19,7 @@ namespace MultiTenantStripeAPI.Application.Features.Tenant.Commands.CreateTenant
 
         public async Task<string> Handle(CreateTenantCommand request, CancellationToken cancellationToken)
         {
-            var tenant = _tenantService.CreateTenant(request.TenantName, request.Email);
+            var tenant = await _tenantService.CreateTenantAsync(request.TenantId, request.TenantName, request.Email, request.PlanType);
             return tenant.TenantId; // Return the Tenant ID as a response
         }
     }

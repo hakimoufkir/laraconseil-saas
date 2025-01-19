@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using MultiTenantStripeAPI.Application.IServices;
 using MultiTenantStripeAPI.Domain.Entities;
-
+using Stripe;
 
 namespace MultiTenantStripeAPI.Application.Features.Payment.Commands.CreateCheckoutSession
 {
@@ -20,26 +20,27 @@ namespace MultiTenantStripeAPI.Application.Features.Payment.Commands.CreateCheck
 
         public async Task<string> Handle(CreateCheckoutSessionCommand request, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(request.PlanType))
+                throw new ArgumentException("Plan type must be provided.", nameof(request.PlanType));
+
             MultiTenantStripeAPI.Domain.Entities.Tenant tenant;
 
             try
             {
-                // Check if a tenant with the provided email already exists
-                tenant = _tenantService.GetTenantByEmail(request.Email);
-                Console.WriteLine($"Tenant with email {request.Email} already exists.");
+                // Create Stripe checkout session for the tenant with metadata
+                var session = _stripeService.CreateCheckoutSession(request.TenantId, request.TenantName, request.Email, request.PlanType);
+
+                // Session ID is returned here, which can be used to redirect the customer to the Stripe Checkout page
+                Console.WriteLine($"Created Stripe Checkout session for tenant: {request.TenantName}, email: {request.Email}, plan: {request.PlanType}");
+
+                // Return the session ID for redirection to Stripe Checkout
+                return session.Id;
             }
-            catch (InvalidOperationException)
+            catch (Exception ex)
             {
-                // If the tenant does not exist, create a new one
-                Console.WriteLine($"Tenant with email {request.Email} does not exist. Creating a new tenant.");
-                tenant = _tenantService.CreateTenant(request.TenantName, request.Email);
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw; // Re-throw the exception for the outer handler to deal with
             }
-
-            // Create a Stripe checkout session for the tenant
-            var session = _stripeService.CreateCheckoutSession(tenant.TenantName, tenant.Email);
-
-            // Return the session ID for further processing or redirection
-            return session.Id;
         }
     }
 }

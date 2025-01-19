@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MultiTenantStripeAPI.Application.Features.Users.Commands.CreateUser;
+using MultiTenantStripeAPI.Application.IServices;
+using MultiTenantStripeAPI.Application.Services;
+using MultiTenantStripeAPI.Domain.Entities;
 
 namespace MultiTenantStripeAPI.Api.Controllers
 {
@@ -10,10 +13,12 @@ namespace MultiTenantStripeAPI.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IServiceBusPublisher _serviceBusPublisher;
 
-        public UserController(IMediator mediator)
+        public UserController(IMediator mediator, IServiceBusPublisher serviceBusPublisher)
         {
             _mediator = mediator;
+            _serviceBusPublisher = serviceBusPublisher;
         }
 
         [HttpPost("create")]
@@ -29,5 +34,29 @@ namespace MultiTenantStripeAPI.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+
+        [HttpPost("signup")]
+        public async Task<IActionResult> CreateUserWithoutRolesAsync([FromBody] KeycloakActionData createUserWithoutRolesAsync)
+        {
+            try
+            {
+                await _serviceBusPublisher.PublishMessageAsync("keycloak-actions", new KeycloakActionMessage
+                {
+                    Action = "CreateUserWithoutRoles",
+                    Data = new KeycloakActionData
+                    {
+                        TenantName = createUserWithoutRolesAsync.TenantName,
+                        TenantEmail = createUserWithoutRolesAsync.TenantEmail
+                    }
+                });
+                return Ok(new { Message = "User created successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+
     }
 }

@@ -6,6 +6,7 @@ using MultiTenantStripeAPI.Application.Features.Payment.Commands.CreateCheckoutS
 using MultiTenantStripeAPI.Application.Features.Payment.Commands.ProcessStripeEvent;
 using MultiTenantStripeAPI.Application.Features.Payment.Queries;
 using MultiTenantStripeAPI.Domain.Entities;
+using Newtonsoft.Json;
 using Stripe;
 using Stripe.Events;
 using System;
@@ -47,20 +48,27 @@ namespace MultiTenantStripeAPI.Api.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
         [HttpPost("webhook")]
         public async Task<IActionResult> Webhook()
         {
             try
             {
+                // Read the raw JSON data from the request body
                 var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+
+                // Retrieve the Stripe signature header
                 var signatureHeader = Request.Headers["Stripe-Signature"];
 
+                // Check for missing signature
                 if (string.IsNullOrEmpty(signatureHeader))
                 {
+                    Console.WriteLine("Missing Stripe-Signature header.");
                     return BadRequest("Missing Stripe-Signature header.");
                 }
 
+                Console.WriteLine($"Received Stripe webhook event with signature: {signatureHeader}");
+
+                // Construct the Stripe event from the incoming JSON and signature
                 var stripeEvent = EventUtility.ConstructEvent(
                     json,
                     signatureHeader,
@@ -68,17 +76,30 @@ namespace MultiTenantStripeAPI.Api.Controllers
                     throwOnApiVersionMismatch: false
                 );
 
+                // Log the entire stripeEvent to the console for debugging
+                var stripeEventJson = JsonConvert.SerializeObject(stripeEvent, Formatting.Indented);
+                //Console.WriteLine($"Stripe Event: {stripeEventJson}");
+
+                // Process the Stripe event (pass the event to your mediator handler)
                 await _mediator.Send(new ProcessStripeEventCommand(stripeEvent));
+
+                // Log success message
+                Console.WriteLine("Stripe event processed successfully.");
+
                 return Ok();
             }
             catch (StripeException e)
             {
+                Console.WriteLine($"Stripe Error while processing webhook: {e.Message}");
                 return BadRequest($"Stripe Error: {e.Message}");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"An error occurred while processing the webhook: {ex.Message}");
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+
     }
 }

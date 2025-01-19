@@ -47,7 +47,10 @@ namespace MultiTenantStripeAPI.Infrastructure.Persistence.Context
                     TenantName = "Tenant One",
                     Email = "tenant1@example.com",
                     SubscriptionStatus = "Active",
-                    DatabaseConnectionString = "ConnectionStringForTenant1"
+                    PlanType = "Grower",
+                    DatabaseConnectionString = "ConnectionStringForTenant1",
+                    CreatedAt = DateTime.UtcNow,
+                    LastUpdated = DateTime.UtcNow
                 },
                 new Tenant
                 {
@@ -55,7 +58,10 @@ namespace MultiTenantStripeAPI.Infrastructure.Persistence.Context
                     TenantName = "Tenant Two",
                     Email = "tenant2@example.com",
                     SubscriptionStatus = "Pending",
-                    DatabaseConnectionString = "ConnectionStringForTenant2"
+                    PlanType = "Station",
+                    DatabaseConnectionString = "ConnectionStringForTenant2",
+                    CreatedAt = DateTime.UtcNow,
+                    LastUpdated = DateTime.UtcNow
                 }
             );
 
@@ -113,7 +119,5 @@ namespace MultiTenantStripeAPI.Infrastructure.Persistence.Context
 
             base.OnModelCreating(modelBuilder);
         }
-
-
     }
 }

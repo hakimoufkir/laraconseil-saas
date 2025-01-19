@@ -19,7 +19,7 @@ namespace MultiTenantStripeAPI.Application.Features.Tenant.Queries.GetTenantByEm
 
         public async Task<MultiTenantStripeAPI.Domain.Entities.Tenant> Handle(GetTenantByEmailQuery request, CancellationToken cancellationToken)
         {
-            return _tenantService.GetTenantByEmail(request.Email);
+            return await _tenantService.GetTenantByEmailAsync(request.Email);
         }
     }
 }

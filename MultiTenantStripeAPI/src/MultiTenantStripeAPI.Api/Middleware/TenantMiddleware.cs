@@ -24,7 +24,8 @@ namespace MultiTenantStripeAPI.Api.Middleware
             "/api/TestAuth/anonymous",
             "/api/TestAuth/grower",
             "/api/TestAuth/station",
-            "/api/TestAuth/claims"
+            "/api/TestAuth/claims",
+            "/api/User/signup"
         };
 
         public TenantMiddleware(RequestDelegate next, IMemoryCache cache)

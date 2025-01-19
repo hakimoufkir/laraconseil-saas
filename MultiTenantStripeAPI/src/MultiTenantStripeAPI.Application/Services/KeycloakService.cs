@@ -12,42 +12,31 @@ namespace MultiTenantStripeAPI.Application.Services
             _serviceBusPublisher = serviceBusPublisher ?? throw new ArgumentNullException(nameof(serviceBusPublisher));
         }
 
-        public async Task CreateRealmAndUserAsync(string realmName, string tenantEmail)
+        public async Task CreateRealmAndUserAsync(KeycloakActionData keycloakActionData)
         {
             // Validate inputs
-            if (string.IsNullOrWhiteSpace(realmName))
+            if (keycloakActionData is null)
             {
-                Console.WriteLine("Error: Realm name is required.");
-                throw new ArgumentException("Realm name must be provided.", nameof(realmName));
+                Console.WriteLine("Error: keycloakActionData is required.");
+                throw new ArgumentException("Error: keycloakActionData is required.", nameof(keycloakActionData));
             }
-
-            if (string.IsNullOrWhiteSpace(tenantEmail))
-            {
-                Console.WriteLine("Error: Tenant email is required.");
-                throw new ArgumentException("Tenant email must be provided.", nameof(tenantEmail));
-            }
-
             // Construct the message
             KeycloakActionMessage message = new()
             {
-                Action = "CreateRealmAndUser",
-                Data = new KeycloakActionData
-                {
-                    RealmName = realmName,
-                    TenantEmail = tenantEmail
-                }
+                Action = "AssignRolesToUser",
+                Data = keycloakActionData
             };
 
             try
             {
                 // Serialize and publish the message
                 await _serviceBusPublisher.PublishMessageAsync("keycloak-actions", message);
-                Console.WriteLine($"[KeycloakService] Action published: Realm '{realmName}', Tenant '{tenantEmail}'.");
+                Console.WriteLine($"[KeycloakService] Action published: keycloakActionData '{keycloakActionData}'.");
             }
             catch (Exception ex)
             {
                 // Log the error
-                Console.WriteLine($"[KeycloakService] Error publishing message for realm '{realmName}', tenant '{tenantEmail}': {ex.Message}");
+                Console.WriteLine($"[KeycloakService] Error publishing message for keycloakActionData '{keycloakActionData}',{ex.Message}");
                 throw;
             }
         }

@@ -18,6 +18,9 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { NotFoundComponent } from './components/not-found/not-found.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { UserSignupComponent } from './components/user-signup/user-signup.component';
+import { HomeComponent } from './components/home/home.component';
+import { AppCardSelectionComponent } from './components/app-card-selection/app-card-selection.component';
 
 
 function initializeKeycloak(keycloak: KeycloakService) {
@@ -49,6 +52,9 @@ function initializeKeycloak(keycloak: KeycloakService) {
     NavbarComponent,
     NotFoundComponent,
     FooterComponent,
+    UserSignupComponent,
+    HomeComponent,
+    AppCardSelectionComponent,
   ],
   imports: [
     KeycloakAngularModule,

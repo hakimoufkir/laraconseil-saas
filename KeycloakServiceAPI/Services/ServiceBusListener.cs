@@ -2,73 +2,94 @@ using Azure.Messaging.ServiceBus;
 using System.Text.Json;
 using KeycloakServiceAPI.Models;
 
-namespace KeycloakServiceAPI.Services;
-
-public class ServiceBusListener
+namespace KeycloakServiceAPI.Services
 {
-    private readonly ServiceBusClient _serviceBusClient;
-    private readonly KeycloakService _keycloakService;
-
-    public ServiceBusListener(ServiceBusClient serviceBusClient, KeycloakService keycloakService)
+    public class ServiceBusListener
     {
-        _serviceBusClient = serviceBusClient ?? throw new ArgumentNullException(nameof(serviceBusClient));
-        _keycloakService = keycloakService ?? throw new ArgumentNullException(nameof(keycloakService));
-    }
+        private readonly ServiceBusClient _serviceBusClient;
+        private readonly KeycloakService _keycloakService;
 
-    public async Task StartAsync()
-    {
-        // Configure processor for keycloak-actions topic with keycloak-service-sub subscription
-        var processor = _serviceBusClient.CreateProcessor("keycloak-actions", "keycloak-service-sub", new ServiceBusProcessorOptions());
-        processor.ProcessMessageAsync += ProcessMessageAsync;
-        processor.ProcessErrorAsync += ProcessErrorAsync;
-
-        // Start listening
-        await processor.StartProcessingAsync();
-        Console.WriteLine("Keycloak Service Bus Listener started for 'keycloak-actions' topic with subscription 'keycloak-service-sub'.");
-    }
-
-    private async Task ProcessMessageAsync(ProcessMessageEventArgs args)
-    {
-        try
+        public ServiceBusListener(ServiceBusClient serviceBusClient, KeycloakService keycloakService)
         {
-            var messageBody = args.Message.Body.ToString();
-            Console.WriteLine($"[Keycloak-Actions] Received message: {messageBody}");
+            _serviceBusClient = serviceBusClient ?? throw new ArgumentNullException(nameof(serviceBusClient));
+            _keycloakService = keycloakService ?? throw new ArgumentNullException(nameof(keycloakService));
+        }
 
-            KeycloakActionMessage message = null;
+        public async Task StartAsync()
+        {
+            var processor = _serviceBusClient.CreateProcessor("keycloak-actions", "keycloak-service-sub", new ServiceBusProcessorOptions());
+            processor.ProcessMessageAsync += ProcessMessageAsync;
+            processor.ProcessErrorAsync += ProcessErrorAsync;
 
+            await processor.StartProcessingAsync();
+            Console.WriteLine("Keycloak Service Bus Listener started for 'keycloak-actions' topic with subscription 'keycloak-service-sub'.");
+        }
+
+        private async Task ProcessMessageAsync(ProcessMessageEventArgs args)
+        {
             try
             {
-                message = System.Text.Json.JsonSerializer.Deserialize<KeycloakActionMessage>(messageBody);
-                Console.WriteLine($"[Keycloak-Actions] Deserialized message: Action={message?.Action}, RealmName={message?.Data?.RealmName}, TenantEmail={message?.Data?.TenantEmail}");
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"[Keycloak-Actions] Deserialization error: {ex.Message}");
-            }
-            if (message?.Action == "CreateRealmAndUser")
-            {
-                Console.WriteLine($"[Keycloak-Actions] Processing 'CreateRealmAndUser' for Realm: {message.Data.RealmName}, Tenant: {message.Data.TenantEmail}");
-                await _keycloakService.CreateRealmAndUserAsync(message.Data.RealmName, message.Data.TenantEmail);
-            }
+                var messageBody = args.Message.Body.ToString();
+                Console.WriteLine($"[Keycloak-Actions] Received message: {messageBody}");
 
-            // Complete the message after successful processing
-            await args.CompleteMessageAsync(args.Message);
-        }
-        catch (JsonException jsonEx)
-        {
-            Console.WriteLine($"[Keycloak-Actions] JSON Deserialization Error: {jsonEx.Message}");
-            await args.DeadLetterMessageAsync(args.Message);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Keycloak-Actions] Processing Error: {ex.Message}");
-            await args.AbandonMessageAsync(args.Message); // Retry the message
-        }
-    }
+                KeycloakActionMessage? message = null;
 
-    private Task ProcessErrorAsync(ProcessErrorEventArgs args)
-    {
-        Console.WriteLine($"[Service Bus Error] {args.Exception.Message}");
-        return Task.CompletedTask;
+                try
+                {
+                    message = JsonSerializer.Deserialize<KeycloakActionMessage>(messageBody);
+                    Console.WriteLine($"[Keycloak-Actions] Deserialized message: Action={message?.Action}, TenantName={message?.Data?.TenantName}, TenantEmail={message?.Data?.TenantEmail}, PlanType={message?.Data?.PlanType}");
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"[Keycloak-Actions] Deserialization error: {ex.Message}");
+                    await args.DeadLetterMessageAsync(args.Message); // Dead-letter the message if deserialization fails
+                    return;
+                }
+
+                if (message?.Action == "CreateUserWithoutRoles")
+                {
+                    if (message.Data?.TenantName == null || message.Data?.TenantEmail == null)
+                    {
+                        Console.WriteLine("[Keycloak-Actions] Invalid message data: TenantName or TenantEmail is null.");
+                        await args.DeadLetterMessageAsync(args.Message); // Dead-letter if data is invalid
+                        return;
+                    }
+
+                    Console.WriteLine($"[Keycloak-Actions] Processing 'CreateUserWithoutRoles' for Client: {message.Data.TenantName}, Tenant: {message.Data.TenantEmail}, PlanType: {message.Data.PlanType}");
+                    await _keycloakService.CreateUserWithoutRolesAsync(message.Data.TenantName, message.Data.TenantEmail);
+                }
+                else if (message?.Action == "AssignRolesToUser")
+                {
+                    if (message.Data?.TenantEmail == null || message.Data?.PlanType == null)
+                    {
+                        Console.WriteLine("[Keycloak-Actions] Invalid message data: TenantEmail or PlanType is null.");
+                        await args.DeadLetterMessageAsync(args.Message); // Dead-letter if data is invalid
+                        return;
+                    }
+
+                    Console.WriteLine($"[Keycloak-Actions] Processing 'AssignRolesToUser' for Tenant: {message.Data.TenantEmail}, PlanType: {message.Data.PlanType}");
+                    await _keycloakService.AssignRolesToUserAsync(message.Data.TenantEmail, message.Data.PlanType);
+                }
+                else
+                {
+                    Console.WriteLine("[Keycloak-Actions] Action not recognized: " + message?.Action);
+                    await args.DeadLetterMessageAsync(args.Message); // Dead-letter if action is not recognized
+                }
+
+                // Complete the message after successful processing
+                await args.CompleteMessageAsync(args.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Keycloak-Actions] Processing Error: {ex.Message}");
+                await args.DeadLetterMessageAsync(args.Message); // Dead-letter on error
+            }
+        }
+
+        private Task ProcessErrorAsync(ProcessErrorEventArgs args)
+        {
+            Console.WriteLine($"[Service Bus Error] {args.Exception.Message}");
+            return Task.CompletedTask;
+        }
     }
 }

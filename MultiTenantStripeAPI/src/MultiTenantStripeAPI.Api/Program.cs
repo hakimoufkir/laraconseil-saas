@@ -10,15 +10,26 @@ using MultiTenantStripeAPI.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+// Explicitly configure Kestrel to listen on the assigned port
+var port = builder.Configuration["MULTITENANT_API_PORT"] ?? "5005";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // Configuration validation
 var requiredKeysMultiTenant = new Dictionary<string, string>
 {
     { "ConnectionStrings:AzureServiceBus", "Azure Service Bus connection string is missing." },
-    { "ConnectionStrings:DefaultSQLConnection", "SQL connection string is missing." },
+    
+    { "ConnectionStrings:DefaultSQLConnection", "Postgresql connection string is missing." },
+    
     { "Stripe:SecretKey", "Stripe secret key is missing." },
     { "Stripe:PublishableKey", "Stripe publishable key is missing." },
     { "Stripe:WebhookSecret", "Stripe webhook secret is missing." },
-    { "SERVICE_PORT", "Service port is missing." }
+
+    { "Authentication:Audience", "Authentication audience is missing." },
+    { "Authentication:MetadataAddress", "Authentication metadata address is missing." },
+    { "Authentication:ValidIssuer", "Authentication valid issuer is missing." },
+    { "Keycloak:AuthorizationUrl", "Keycloak authorization URL is missing."}
 };
 
 // Validate configuration
@@ -156,7 +167,7 @@ Console.WriteLine("[INFO] Authorization policies configured.");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowOrigin", policy =>
-        policy.WithOrigins("http://localhost:4200", "https://subscription-app.azurecontainerapps.io")
+        policy.WithOrigins("http://localhost:4200", "https://webapp.gentlegrass-3889baac.westeurope.azurecontainerapps.io")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());

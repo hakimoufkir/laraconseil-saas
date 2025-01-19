@@ -1,10 +1,17 @@
+using System.Text.Json.Serialization;
+
 namespace MessagerService.Models
 {
   public class NotificationMessage
-    {
-    public string Subject { get; set; } = string.Empty;
-    public string RecipientEmail { get; set; } = string.Empty;
-    public NotificationPayload Payload { get; set; } = new NotificationPayload();
-    }
+  {
+    [JsonPropertyName("subject")]
+    public string Subject { get; set; }
+
+    [JsonPropertyName("recipientEmail")]
+    public string RecipientEmail { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; }
+  }
 
 }

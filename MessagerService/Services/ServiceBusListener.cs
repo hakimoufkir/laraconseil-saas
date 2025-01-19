@@ -48,18 +48,24 @@ namespace MessagerService.Services
                 if (notification == null || string.IsNullOrEmpty(notification.Subject) || string.IsNullOrEmpty(notification.RecipientEmail))
                 {
                     Console.WriteLine("[Notifications] Invalid message payload.");
+                    await args.DeadLetterMessageAsync(args.Message);
                     return;
                 }
 
                 // Handle specific notifications based on the subject
                 switch (notification.Subject)
                 {
-                    case "Realm Created":
-                        await HandleRealmCreated(notification);
+                    case "User Created":
+                        await HandleUserCreated(notification);
+                        break;
+
+                    case "Roles Assigned to User":
+                        await HandleRolesAssigned(notification);
                         break;
 
                     default:
                         Console.WriteLine($"[Notifications] Unhandled notification subject: {notification.Subject}");
+                        await args.DeadLetterMessageAsync(args.Message); // Dead-letter if action is not recognized
                         break;
                 }
 
@@ -68,6 +74,7 @@ namespace MessagerService.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[Notifications] Error processing message: {ex.Message}");
+                await args.DeadLetterMessageAsync(args.Message); // Dead-letter on error
             }
         }
 
@@ -82,6 +89,7 @@ namespace MessagerService.Services
                 if (subscriptionEvent == null || string.IsNullOrEmpty(subscriptionEvent.Subject) || string.IsNullOrEmpty(subscriptionEvent.RecipientEmail))
                 {
                     Console.WriteLine("[SubscriptionEvents] Invalid message payload.");
+                    await args.DeadLetterMessageAsync(args.Message);
                     return;
                 }
 
@@ -89,13 +97,20 @@ namespace MessagerService.Services
                 switch (subscriptionEvent.Subject)
                 {
                     case "Subscription Activated":
+                        await HandleSubscriptionActivated(subscriptionEvent);
+                        break;
+
                     case "Subscription Updated":
+                        await HandleSubscriptionUpdated(subscriptionEvent);
+                        break;
+
                     case "Subscription Canceled":
-                        await HandleSubscriptionUpdatedOrCanceled(subscriptionEvent);
+                        await HandleSubscriptionCanceled(subscriptionEvent);
                         break;
 
                     default:
                         Console.WriteLine($"[SubscriptionEvents] Unhandled subscription event subject: {subscriptionEvent.Subject}");
+                        await args.DeadLetterMessageAsync(args.Message); // Dead-letter if action is not recognized
                         break;
                 }
 
@@ -104,27 +119,51 @@ namespace MessagerService.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[SubscriptionEvents] Error processing message: {ex.Message}");
+                await args.DeadLetterMessageAsync(args.Message); // Dead-letter on error
             }
         }
-        private async Task HandleRealmCreated(NotificationMessage notification)
+
+        private async Task HandleUserCreated(NotificationMessage notification)
         {
-            Console.WriteLine($"Processing realm creation for: {notification?.RecipientEmail ?? "undefined"}");
+            Console.WriteLine($"Processing user creation for: {notification?.RecipientEmail ?? "undefined"}");
             string subject = "Your Account Has Been Created";
-            string body = $@"
-        <h1>Welcome to Our Platform!</h1>
-        <p>Your account has been created under the realm: <strong>{notification?.Payload?.Realm ?? "Unknown Realm"}</strong>.</p>
-        <p>Details: {notification?.Payload?.Message ?? "No additional details available."}</p>";
+            string body = notification.Message; // Directly using the message
 
             await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
         }
 
-        private async Task HandleSubscriptionUpdatedOrCanceled(NotificationMessage notification)
+        private async Task HandleRolesAssigned(NotificationMessage notification)
         {
-            Console.WriteLine($"Processing subscription update/cancellation for: {notification?.RecipientEmail ?? "undefined"}");
-            string subject = $"Your Subscription Has Been {notification?.Payload?.SubscriptionStatus ?? "Unknown"}!";
-            string body = $@"
-        <h1>Hello, {notification?.Payload?.TenantName ?? "User"}!</h1>
-        <p>{notification?.Payload?.Message ?? "No additional details available."}</p>";
+            Console.WriteLine($"Processing roles assignment for: {notification?.RecipientEmail ?? "undefined"}");
+            string subject = "Your Roles Have Been Assigned";
+            string body = notification.Message; // Directly using the message
+
+            await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
+        }
+
+        private async Task HandleSubscriptionActivated(NotificationMessage notification)
+        {
+            Console.WriteLine($"Processing subscription activation for: {notification?.RecipientEmail ?? "undefined"}");
+            string subject = "Subscription Activated";
+            string body = notification.Message; // Directly using the message
+
+            await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
+        }
+
+        private async Task HandleSubscriptionUpdated(NotificationMessage notification)
+        {
+            Console.WriteLine($"Processing subscription update for: {notification?.RecipientEmail ?? "undefined"}");
+            string subject = "Your Subscription Has Been Updated";
+            string body = notification.Message; // Directly using the message
+
+            await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
+        }
+
+        private async Task HandleSubscriptionCanceled(NotificationMessage notification)
+        {
+            Console.WriteLine($"Processing subscription cancellation for: {notification?.RecipientEmail ?? "undefined"}");
+            string subject = "Your Subscription Has Been Canceled";
+            string body = notification.Message; // Directly using the message
 
             await _emailService.SendEmailAsync(notification?.RecipientEmail ?? "undefined@domain.com", subject, body);
         }

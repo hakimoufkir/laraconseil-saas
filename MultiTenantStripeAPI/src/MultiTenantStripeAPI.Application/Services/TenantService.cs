@@ -14,14 +14,15 @@ namespace MultiTenantStripeAPI.Application.Services
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         }
 
-        public Tenant CreateTenant(string tenantName, string email)
+        public async Task<Tenant> CreateTenantAsync(string tenantId, string tenantName, string email, string planType)
         {
-            if (string.IsNullOrWhiteSpace(tenantName) || string.IsNullOrWhiteSpace(email))
+            // Ensure all required fields are provided
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(tenantName) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(planType))
             {
-                throw new ArgumentException("Tenant name and email must be provided.");
+                throw new ArgumentException("TenantId, TenantName, email, and plan type must be provided.");
             }
 
-            Console.WriteLine($"Attempting to create tenant: {tenantName}, {email}");
+            Console.WriteLine($"Attempting to create tenant with TenantId: {tenantId}, TenantName: {tenantName}, Email: {email}, PlanType: {planType}");
 
             // Check if a tenant with the same email already exists
             var existingTenant = _unitOfWork.TenantRepository.GetByEmail(email);
@@ -31,50 +32,64 @@ namespace MultiTenantStripeAPI.Application.Services
                 throw new InvalidOperationException($"A tenant with email '{email}' already exists.");
             }
 
-            // Create a new tenant
+            // Create a new tenant with the provided details
             var tenant = new Tenant
             {
-                TenantId = Guid.NewGuid().ToString(),
-                TenantName = tenantName,
+                TenantId = tenantId, // Use the provided TenantId
+                TenantName = tenantName, // Set the TenantName
                 Email = email,
-                SubscriptionStatus = "Pending"
+                PlanType = planType,  // Ensure PlanType is set here
+                SubscriptionStatus = "Pending"  // Default subscription status
             };
 
             // Dynamically create a database for the tenant
             var databaseName = $"Tenant_{tenant.TenantId}";
             var masterConnection = "Host=my-lc-postgres-server.postgres.database.azure.com;Database=postgres;Username=adminLaraconseil;Password=StrongPassword@123;";
 
-            using (var connection = new NpgsqlConnection(masterConnection))
+            try
             {
-                connection.Open();
-                var createDbCommand = connection.CreateCommand();
-                createDbCommand.CommandText = $"CREATE DATABASE \"{databaseName}\"";
-                createDbCommand.ExecuteNonQuery();
+                using (var connection = new NpgsqlConnection(masterConnection))
+                {
+                    connection.Open();
+                    var createDbCommand = connection.CreateCommand();
+                    createDbCommand.CommandText = $"CREATE DATABASE \"{databaseName}\"";
+                    createDbCommand.ExecuteNonQuery();
+                    Console.WriteLine($"Database '{databaseName}' created successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating database for tenant {tenant.TenantName}: {ex.Message}");
+                throw; // Propagate the error
             }
 
             // Assign the database connection string to the tenant
             tenant.DatabaseConnectionString = $"Host=my-lc-postgres-server.postgres.database.azure.com;Database={databaseName};Username=adminLaraconseil;Password=StrongPassword@123;";
 
             // Save the tenant to the database
-            _unitOfWork.TenantRepository.CreateAsync(tenant);
-            _unitOfWork.Commit();
+            await _unitOfWork.TenantRepository.CreateAsync(tenant); // Ensure async is awaited
+            await _unitOfWork.CommitAsync(); // Ensure commit is also awaited
 
             Console.WriteLine($"Tenant created successfully with database: {tenant.TenantId}");
             return tenant;
         }
 
-        public Tenant GetTenantByEmail(string email)
+        public async Task<Tenant> GetTenantByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
                 throw new ArgumentException("Email must be provided.");
             }
 
-            return _unitOfWork.TenantRepository.GetByEmail(email)
-                   ?? throw new InvalidOperationException($"No tenant found with email '{email}'.");
+            var tenant = _unitOfWork.TenantRepository.GetByEmail(email);
+            if (tenant == null)
+            {
+                Console.WriteLine($"No tenant found with email '{email}'.");
+            }
+            return tenant;
         }
 
-        public Tenant GetTenantById(string tenantId)
+        public async Task<Tenant> GetTenantByIdAsync(string tenantId)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -85,7 +100,7 @@ namespace MultiTenantStripeAPI.Application.Services
                    ?? throw new InvalidOperationException($"No tenant found with ID '{tenantId}'.");
         }
 
-        public void UpdateTenantStatus(Tenant tenant, string status)
+        public async Task UpdateTenantStatusAsync(Tenant tenant, string status)
         {
             if (tenant == null)
             {
@@ -98,21 +113,46 @@ namespace MultiTenantStripeAPI.Application.Services
             }
 
             tenant.SubscriptionStatus = status;
-            _unitOfWork.Commit();
+            await _unitOfWork.CommitAsync();
         }
 
-        public void DeleteTenant(string tenantId)
+        public async Task DeleteTenantAsync(string tenantId)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
                 throw new ArgumentException("Tenant ID must be provided.");
             }
 
-            var tenant = GetTenantById(tenantId);
-            _unitOfWork.TenantRepository.RemoveAsync(tenant);
-            _unitOfWork.Commit();
+            var tenant = await GetTenantByIdAsync(tenantId);
+            await _unitOfWork.TenantRepository.RemoveAsync(tenant);
+            await _unitOfWork.CommitAsync();
         }
 
-        
+
+        public async Task<Tenant> GetTenantByEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Email must be provided.");
+            }
+
+            var tenant = _unitOfWork.TenantRepository.GetByEmail(email);
+            if (tenant == null)
+            {
+                Console.WriteLine($"No tenant found with email '{email}'.");
+            }
+            return tenant;
+        }
+
+        public async Task<Tenant> GetTenantById(string tenantId)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new ArgumentException("Tenant ID must be provided.");
+            }
+
+            return _unitOfWork.TenantRepository.GetByTenantId(tenantId)
+                   ?? throw new InvalidOperationException($"No tenant found with ID '{tenantId}'.");
+        }
     }
 }
